@@ -1,0 +1,199 @@
+{
+  "title": "Zarr v2 array metadata (.zarray)",
+  "description": "A Zarr v2 array metadata document. See https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html",
+  "$defs": {
+    "JSONValue": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ZarrV2CodecMetadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JSONValue"
+      },
+      "description": "A numcodecs configuration dict, used as a v2 compressor or filter.\n\nThe required `id` field names the codec; codec-specific parameters\n(e.g. `cname`, `clevel` for blosc) appear as extra fields.\n\nSee the \"compressor\" and \"filters\" sections of\nhttps://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "ZarrV2CodecMetadata",
+      "type": "object"
+    },
+    "ZarrV2DataTypeMetadata": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/ZarrV2DataTypeMetadata"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/ZarrV2DataTypeMetadata"
+                  },
+                  {
+                    "items": {
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  }
+                ],
+                "type": "array"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "zarr_format": {
+      "const": 2,
+      "title": "Zarr Format",
+      "type": "integer",
+      "description": "The Zarr format version. Always the integer 2."
+    },
+    "shape": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "title": "Shape",
+      "type": "array",
+      "description": "The dimensions of the array: one non-negative integer per axis."
+    },
+    "chunks": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "title": "Chunks",
+      "type": "array",
+      "description": "The chunk dimensions: one non-negative integer per axis, with the same number of dimensions as shape."
+    },
+    "dtype": {
+      "$ref": "#/$defs/ZarrV2DataTypeMetadata",
+      "description": "The numpy-style data type, e.g. \"<f8\" (little-endian float64), or a list of field records for structured dtypes."
+    },
+    "compressor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ZarrV2CodecMetadata"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The primary compressor: a numcodecs configuration object with a string \"id\", or null for no compression."
+    },
+    "fill_value": {
+      "$ref": "#/$defs/JSONValue",
+      "description": "The value used for unwritten chunks."
+    },
+    "order": {
+      "enum": [
+        "C",
+        "F"
+      ],
+      "title": "Order",
+      "type": "string",
+      "description": "The in-chunk memory layout: \"C\" (row-major) or \"F\" (column-major)."
+    },
+    "filters": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ZarrV2CodecMetadata"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Filters",
+      "description": "A list of numcodecs filter configurations applied before the compressor, or null for none. An empty list is not permitted."
+    },
+    "dimension_separator": {
+      "enum": [
+        ".",
+        "/"
+      ],
+      "title": "Dimension Separator",
+      "type": "string",
+      "description": "The chunk-key separator: \".\" (default, flat keys like 0.0) or \"/\" (nested directories)."
+    },
+    "attributes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JSONValue"
+      },
+      "title": "Attributes",
+      "type": "object",
+      "description": "User attributes. On disk these live in the sibling .zattrs file, NOT in .zarray; this key is tolerated here for merged representations."
+    }
+  },
+  "required": [
+    "zarr_format",
+    "shape",
+    "chunks",
+    "dtype",
+    "compressor",
+    "fill_value",
+    "order",
+    "filters"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,59 @@
+{
+  "title": "Zarr v2 consolidated metadata (.zmetadata)",
+  "description": "The reference implementation's consolidated-metadata convention (not a spec artifact).",
+  "$defs": {
+    "JSONValue": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "zarr_consolidated_format": {
+      "const": 1,
+      "title": "Zarr Consolidated Format",
+      "type": "integer",
+      "description": "The consolidated-metadata format version. Always 1."
+    },
+    "metadata": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JSONValue"
+      },
+      "title": "Metadata",
+      "type": "object",
+      "description": "Flat map from store path (e.g. \"a/b/.zarray\") to the JSON contents of the file at that path."
+    }
+  },
+  "required": [
+    "zarr_consolidated_format",
+    "metadata"
+  ],
+  "type": "object"
+}

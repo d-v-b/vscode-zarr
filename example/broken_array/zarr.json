@@ -1,0 +1,10 @@
+{
+  "zarr_format": 3,
+  "node_type": "array",
+  "shape": [10000, 10000, 3],
+  "data_type": { "name": "float64", "must_understand": false },
+  "chunk_grid": { "name": "regular", "configuration": { "chunk_shape": [1000, 1000] }, "extra": 1 },
+  "fill_value": 0,
+  "codecs": [],
+  "dimension_names": ["y", "x"]
+}

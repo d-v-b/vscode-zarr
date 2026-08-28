@@ -1,0 +1,58 @@
+{
+  "name": "vscode-zarr",
+  "displayName": "Zarr Metadata",
+  "description": "Validation, hover documentation, and completions for Zarr v2/v3 metadata documents (zarr.json, .zarray, .zgroup, .zattrs, .zmetadata).",
+  "version": "0.1.0",
+  "publisher": "d-v-b",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "zarr",
+    "metadata",
+    "json"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc"
+  ],
+  "contributes": {
+    "jsonValidation": [
+      { "fileMatch": "**/zarr.json", "url": "./schemas/zarr3.schema.json" },
+      { "fileMatch": "**/.zarray", "url": "./schemas/zarr2-array.schema.json" },
+      { "fileMatch": "**/.zgroup", "url": "./schemas/zarr2-group.schema.json" },
+      { "fileMatch": "**/.zattrs", "url": "./schemas/zarr2-attrs.schema.json" },
+      { "fileMatch": "**/.zmetadata", "url": "./schemas/zarr2-consolidated.schema.json" }
+    ],
+    "configurationDefaults": {
+      "files.associations": {
+        ".zarray": "json",
+        ".zgroup": "json",
+        ".zattrs": "json",
+        ".zmetadata": "json"
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.0",
+    "zarr-metadata": "file:../zarr-metadata-ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}

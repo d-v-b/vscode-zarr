@@ -1,0 +1,5 @@
+{
+  "title": "Zarr v2 user attributes (.zattrs)",
+  "description": "Arbitrary user attributes for the sibling v2 array or group. See https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html",
+  "type": "object"
+}

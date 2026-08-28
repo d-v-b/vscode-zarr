@@ -1,0 +1,315 @@
+{
+  "title": "Zarr v3 metadata (zarr.json)",
+  "description": "A Zarr v3 array or group metadata document. See https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html",
+  "$defs": {
+    "JSONValue": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ZarrV3ArrayMetadataJSON": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JSONValue"
+      },
+      "description": "Schema input for a v3 array document, including arbitrary extensions.",
+      "properties": {
+        "zarr_format": {
+          "const": 3,
+          "title": "Zarr Format",
+          "type": "integer",
+          "description": "The Zarr format version. Always the integer 3."
+        },
+        "node_type": {
+          "const": "array",
+          "title": "Node Type",
+          "type": "string",
+          "description": "The node kind. Always \"array\" for array metadata."
+        },
+        "data_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/ZarrV3MandatoryNamedConfigJSON"
+            }
+          ],
+          "title": "Data Type",
+          "description": "The data type of the array's elements, e.g. \"float64\" or a {\"name\", \"configuration\"} object for parameterized types."
+        },
+        "shape": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Shape",
+          "type": "array",
+          "description": "The dimensions of the array: one non-negative integer per axis."
+        },
+        "chunk_grid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/ZarrV3MandatoryNamedConfigJSON"
+            }
+          ],
+          "title": "Chunk Grid",
+          "description": "How the array is divided into chunks. The core spec defines the \"regular\" grid, configured with a \"chunk_shape\"."
+        },
+        "chunk_key_encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/ZarrV3MandatoryNamedConfigJSON"
+            }
+          ],
+          "title": "Chunk Key Encoding",
+          "description": "How chunk grid indices map to store keys. The core spec defines \"default\" (separator \"/\") and \"v2\" (separator \".\")."
+        },
+        "fill_value": {
+          "$ref": "#/$defs/JSONValue",
+          "description": "The value used for unwritten regions of the array. Its permitted JSON shape depends on data_type (e.g. \"NaN\" or a hex string for floats)."
+        },
+        "codecs": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/ZarrV3NamedConfigJSON"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Codecs",
+          "type": "array",
+          "description": "The codec pipeline applied to each chunk, in order: zero or more array\u2192array codecs, exactly one array\u2192bytes codec, then zero or more bytes\u2192bytes codecs."
+        },
+        "attributes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "title": "Attributes",
+          "type": "object",
+          "description": "Arbitrary user metadata for this array."
+        },
+        "storage_transformers": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/ZarrV3NamedConfigJSON"
+              }
+            ]
+          },
+          "title": "Storage Transformers",
+          "type": "array",
+          "description": "Storage transformers applied between the codec pipeline and the store. Rarely used; an empty list is equivalent to absence."
+        },
+        "dimension_names": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Dimension Names",
+          "type": "array",
+          "description": "An optional name (or null) for each dimension. Must have exactly one entry per dimension of shape."
+        }
+      },
+      "required": [
+        "zarr_format",
+        "node_type",
+        "data_type",
+        "shape",
+        "chunk_grid",
+        "chunk_key_encoding",
+        "fill_value",
+        "codecs"
+      ],
+      "title": "ZarrV3ArrayMetadataJSON",
+      "type": "object"
+    },
+    "ZarrV3ConsolidatedMetadataJSON": {
+      "additionalProperties": false,
+      "description": "Schema input for the closed inline consolidated-metadata envelope.",
+      "properties": {
+        "kind": {
+          "const": "inline",
+          "title": "Kind",
+          "type": "string"
+        },
+        "must_understand": {
+          "const": false,
+          "title": "Must Understand",
+          "type": "boolean"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ZarrV3ArrayMetadataJSON"
+              },
+              {
+                "$ref": "#/$defs/ZarrV3GroupMetadataJSON"
+              }
+            ]
+          },
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "must_understand",
+        "metadata"
+      ],
+      "title": "ZarrV3ConsolidatedMetadataJSON",
+      "type": "object"
+    },
+    "ZarrV3GroupMetadataJSON": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JSONValue"
+      },
+      "description": "Schema input for a v3 group document, including arbitrary extensions.",
+      "properties": {
+        "zarr_format": {
+          "const": 3,
+          "title": "Zarr Format",
+          "type": "integer",
+          "description": "The Zarr format version. Always the integer 3."
+        },
+        "node_type": {
+          "const": "group",
+          "title": "Node Type",
+          "type": "string",
+          "description": "The node kind. Always \"group\" for group metadata."
+        },
+        "attributes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "title": "Attributes",
+          "type": "object",
+          "description": "Arbitrary user metadata for this group."
+        },
+        "consolidated_metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ZarrV3ConsolidatedMetadataJSON"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Inline consolidated metadata: a snapshot of every child document, embedded by the reference implementation. Not part of the v3 core spec."
+        }
+      },
+      "required": [
+        "zarr_format",
+        "node_type"
+      ],
+      "title": "ZarrV3GroupMetadataJSON",
+      "type": "object"
+    },
+    "ZarrV3MandatoryNamedConfigJSON": {
+      "additionalProperties": false,
+      "description": "Closed named configuration accepted where understanding is mandatory.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "configuration": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "title": "Configuration",
+          "type": "object"
+        },
+        "must_understand": {
+          "const": true,
+          "title": "Must Understand",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ZarrV3MandatoryNamedConfigJSON",
+      "type": "object"
+    },
+    "ZarrV3NamedConfigJSON": {
+      "additionalProperties": false,
+      "description": "Closed v3 named configuration accepted at optional extension points.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "configuration": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JSONValue"
+          },
+          "title": "Configuration",
+          "type": "object"
+        },
+        "must_understand": {
+          "title": "Must Understand",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ZarrV3NamedConfigJSON",
+      "type": "object"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/ZarrV3ArrayMetadataJSON"
+    },
+    {
+      "$ref": "#/$defs/ZarrV3GroupMetadataJSON"
+    }
+  ]
+}
