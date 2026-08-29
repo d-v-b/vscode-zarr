@@ -35,7 +35,7 @@ Every diagnostic is placed on the exact offending value (source: `zarr`).
 ## Development
 
 The extension depends on the TypeScript
-[`zarr-metadata`](https://github.com/zarr-developers/zarr-metadata-ts) library,
+[`zarr-metadata`](https://github.com/d-v-b/zarr-metadata-ts) library,
 resolved from a sibling checkout (`file:../zarr-metadata-ts`) until it is
 published to npm.
 

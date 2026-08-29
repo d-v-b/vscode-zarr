@@ -72,9 +72,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zarr-developers/vscode-zarr.git"
+    "url": "git+https://github.com/d-v-b/vscode-zarr.git"
   },
   "bugs": {
-    "url": "https://github.com/zarr-developers/vscode-zarr/issues"
+    "url": "https://github.com/d-v-b/vscode-zarr/issues"
   }
 }
