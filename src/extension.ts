@@ -15,6 +15,7 @@
 import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";
 
+import { ZarrQuickFixProvider } from "./quickfix.js";
 import { validateExtensionConfigurations } from "./registry.js";
 import {
   flattenTree,
@@ -192,6 +193,13 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
 export function activate(context: vscode.ExtensionContext): void {
   const diagnostics = vscode.languages.createDiagnosticCollection("zarr");
   context.subscriptions.push(diagnostics);
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      [{ language: "json" }, { language: "jsonc" }],
+      new ZarrQuickFixProvider(),
+      ZarrQuickFixProvider.metadata,
+    ),
+  );
 
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const scheduleRefresh = (document: vscode.TextDocument) => {

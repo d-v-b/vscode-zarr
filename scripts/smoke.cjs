@@ -22,18 +22,33 @@ class Diagnostic {
   constructor(range, message, severity) { this.range = range; this.message = message; this.severity = severity; }
 }
 const captured = new Map();
+let quickFixProvider;
+class WorkspaceEdit {
+  constructor() { this.edits = []; }
+  replace(uri, range, newText) { this.edits.push({ range, newText }); }
+}
+class CodeAction {
+  constructor(title, kind) { this.title = title; this.kind = kind; }
+}
 const vscode = {
-  languages: { createDiagnosticCollection: () => ({
-    set: (uri, items) => captured.set(uri.toString(), items),
-    delete: () => {}, dispose: () => {},
-  }) },
+  languages: {
+    createDiagnosticCollection: () => ({
+      set: (uri, items) => captured.set(uri.toString(), items),
+      delete: () => {}, dispose: () => {},
+    }),
+    registerCodeActionsProvider: (selector, provider) => {
+      quickFixProvider = provider;
+      return { dispose() {} };
+    },
+  },
   workspace: {
     onDidOpenTextDocument: () => ({ dispose() {} }),
     onDidChangeTextDocument: () => ({ dispose() {} }),
     onDidCloseTextDocument: () => ({ dispose() {} }),
     textDocuments: [],
   },
-  Position, Range, Diagnostic,
+  Position, Range, Diagnostic, WorkspaceEdit, CodeAction,
+  CodeActionKind: { QuickFix: "quickfix" },
   Uri: { parse: (value) => ({ toString: () => value }) },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
 };
@@ -62,7 +77,11 @@ function run(fixture) {
   const document = {
     uri: { path: `/example/${fixture}/zarr.json`, toString: () => uri },
     languageId: "json",
-    getText: () => text,
+    getText: (range) =>
+      range === undefined
+        ? text
+        : text.slice(document.offsetAt(range.start), document.offsetAt(range.end)),
+    offsetAt: (position) => offsets[position.line] + position.character,
     positionAt(offset) {
       let line = offsets.findIndex((o) => o > offset) - 1;
       if (line < 0) line = lines.length - 1;
@@ -73,7 +92,28 @@ function run(fixture) {
   vscode.workspace.textDocuments.length = 0;
   vscode.workspace.textDocuments.push(document);
   ext.activate({ subscriptions: [] });
-  return { diagnostics: captured.get(uri) ?? [], lines };
+  return { diagnostics: captured.get(uri) ?? [], lines, document, text };
+}
+
+/** Apply a stub WorkspaceEdit's replacements to `text`, last-to-first. */
+function applyEdit(document, text, workspaceEdit) {
+  const edits = workspaceEdit.edits
+    .map((e) => ({
+      start: document.offsetAt(e.range.start),
+      end: document.offsetAt(e.range.end),
+      newText: e.newText,
+    }))
+    .sort((a, b) => b.start - a.start);
+  let out = text;
+  for (const e of edits) out = out.slice(0, e.start) + e.newText + out.slice(e.end);
+  return out;
+}
+
+/** All quick-fix actions for one diagnostic. */
+function actionsFor(document, diagnostic) {
+  return quickFixProvider.provideCodeActions(document, diagnostic.range, {
+    diagnostics: [diagnostic],
+  });
 }
 
 // --- broken_array: structural errors + the must_understand warning -------
@@ -121,4 +161,34 @@ function run(fixture) {
   }
 }
 
-console.log("smoke OK: activation, structural + must_understand + registry layers verified");
+// --- quick fixes ----------------------------------------------------------
+{
+  // "Change to \"bytes\"" on the did-you-mean warning repairs the name.
+  const { diagnostics, document, text } = run("bad_codecs");
+  const suggestion = diagnostics.find((d) => d.message.includes("did you mean"));
+  const actions = actionsFor(document, suggestion);
+  if (actions.length !== 1 || actions[0].title !== 'Change to "bytes"') {
+    throw new Error(`quick fix: expected one Change to "bytes" action, got ${JSON.stringify(actions.map((a) => a.title))}`);
+  }
+  const repaired = JSON.parse(applyEdit(document, text, actions[0].edit));
+  const fixed = repaired.codecs[1].configuration.index_codecs[0];
+  if (fixed !== "bytes") {
+    throw new Error(`quick fix: expected index_codecs[0] === "bytes" after fix, got ${JSON.stringify(fixed)}`);
+  }
+}
+{
+  // "Mark as ignorable" inserts the must_understand waiver, and the
+  // repaired document no longer carries the warning.
+  const { diagnostics, document, text } = run("broken_array");
+  const warning = diagnostics.find((d) => d.message.includes("must_understand"));
+  const actions = actionsFor(document, warning);
+  if (actions.length !== 1 || !actions[0].title.includes('"custom_thing"')) {
+    throw new Error(`quick fix: expected one waiver action for custom_thing, got ${JSON.stringify(actions.map((a) => a.title))}`);
+  }
+  const repaired = JSON.parse(applyEdit(document, text, actions[0].edit));
+  if (repaired.custom_thing.must_understand !== false) {
+    throw new Error("quick fix: waiver was not inserted");
+  }
+}
+
+console.log("smoke OK: activation, diagnostics (3 layers), and quick fixes verified");

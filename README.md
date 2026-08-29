@@ -36,7 +36,10 @@ Validation, hover documentation, and completions for
   space is open.
 
 Every diagnostic comes from the same engine, covers the offending
-property, and carries a code linking to the relevant spec section.
+property, and carries a code linking to the relevant spec section. Quick
+fixes repair what the diagnostics find: one-click rename for near-miss
+extension names, and "mark as ignorable" to insert the
+`"must_understand": false` waiver on an extension field.
 
 ## Notes
 
