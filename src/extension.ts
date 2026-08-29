@@ -41,10 +41,15 @@ function validatorFor(document: vscode.TextDocument): Validator | undefined {
 }
 
 /**
- * The text range for a problem: the node at `loc`, or — when the loc points
- * at something absent, like a missing key — the nearest existing ancestor,
- * clamped to its first line so a fallback on the root object doesn't paint
- * the whole document red.
+ * The text range for a problem: the node at the issue's path, or — when the
+ * path points at something absent, like a missing key — the nearest existing
+ * ancestor, clamped to its first line so a fallback on the root object
+ * doesn't paint the whole document red.
+ *
+ * A node that is a property's value widens to the whole property (people
+ * hover the NAME of a field at least as often as its value); when the value
+ * spans multiple lines, just the name is used so a large object or array
+ * isn't underlined wholesale.
  */
 function rangeFor(
   document: vscode.TextDocument,
@@ -56,8 +61,16 @@ function rangeFor(
       end === 0 ? root : findNodeAtLocation(root, issue.path.slice(0, end) as (string | number)[]);
     if (node === undefined) continue;
     const fellBack = end < issue.path.length;
-    let start = document.positionAt(node.offset);
-    let stop = document.positionAt(node.offset + node.length);
+    let target = node;
+    if (!fellBack && node.parent?.type === "property") {
+      const key = node.parent.children?.[0];
+      const multiline =
+        document.positionAt(node.offset).line !==
+        document.positionAt(node.offset + node.length).line;
+      target = (multiline ? key : node.parent) ?? node.parent;
+    }
+    const start = document.positionAt(target.offset);
+    let stop = document.positionAt(target.offset + target.length);
     if (fellBack && stop.line > start.line) {
       stop = document.lineAt(start.line).range.end;
     }

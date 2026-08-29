@@ -74,4 +74,11 @@ if (errors.length < 4 || warnings.length !== 1) {
   console.error("diagnostics:", diagnostics.map((d) => `${d.severity}: ${d.message}`));
   throw new Error(`expected >=4 errors and exactly 1 warning, got ${errors.length}/${warnings.length}`);
 }
+// Diagnostics on a property's value must widen to cover the property
+// name, so hovering the name surfaces them.
+const codecs = errors.find((d) => d.message.includes("at least one codec"));
+const codecsStart = lines[codecs.range.start.line].slice(codecs.range.start.character);
+if (!codecsStart.startsWith('"codecs"')) {
+  throw new Error(`codecs diagnostic should start on the property name, got: ${codecsStart.slice(0, 30)}`);
+}
 console.log(`smoke OK: activation + ${errors.length} errors + ${warnings.length} warning on the example fixture`);
