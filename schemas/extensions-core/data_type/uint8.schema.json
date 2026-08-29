@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "uint8"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false
+}

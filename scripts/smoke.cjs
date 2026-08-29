@@ -121,9 +121,14 @@ function actionsFor(document, diagnostic) {
   const { diagnostics, lines } = run("broken_array");
   const errors = diagnostics.filter((d) => d.severity === 0);
   const warnings = diagnostics.filter((d) => d.severity === 1);
-  if (errors.length !== 5 || warnings.length !== 1) {
+  // 6 errors: five structural plus the semantic chunk-arity finding (the
+  // fixture's shape is 3-D while its regular chunk_shape is 2-D).
+  if (errors.length !== 6 || warnings.length !== 1) {
     console.error(diagnostics.map((d) => `${d.severity}: ${d.message}`));
-    throw new Error(`broken_array: expected 5 errors + 1 warning, got ${errors.length}/${warnings.length}`);
+    throw new Error(`broken_array: expected 6 errors + 1 warning, got ${errors.length}/${warnings.length}`);
+  }
+  if (!errors.some((d) => d.message === "expected one length per dimension of shape (3)")) {
+    throw new Error("broken_array: missing the semantic chunk-arity diagnostic");
   }
   // Diagnostics on a property's value must widen to cover the property
   // name, so hovering the name surfaces them.

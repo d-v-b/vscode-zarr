@@ -801,6 +801,22 @@
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/bfloat16"
     },
+    "bool": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "bool"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "bytes": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -825,6 +841,38 @@
         }
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/bytes"
+    },
+    "complex128": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "complex128"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
+    "complex64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "complex64"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "complex_bfloat16": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1205,6 +1253,38 @@
       "additionalProperties": false,
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/fixed_length_utf32"
     },
+    "float16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "float16"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
+    "float32": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "float32"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "float4_e2m1fn": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -1229,6 +1309,22 @@
         }
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float4_e2m1fn"
+    },
+    "float64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "float64"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "float6_e2m3fn": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1455,6 +1551,22 @@
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e8m0fnu"
     },
+    "int16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "int16"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "int2": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -1480,6 +1592,22 @@
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/int2"
     },
+    "int32": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "int32"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "int4": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -1504,6 +1632,38 @@
         }
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/int4"
+    },
+    "int64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "int64"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
+    "int8": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "int8"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "numpy.datetime64": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1704,6 +1864,22 @@
       "additionalProperties": false,
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/struct"
     },
+    "uint16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "uint16"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "uint2": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -1729,6 +1905,22 @@
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/uint2"
     },
+    "uint32": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "uint32"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
     "uint4": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "oneOf": [
@@ -1753,6 +1945,38 @@
         }
       ],
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/uint4"
+    },
+    "uint64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "uint64"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
+    },
+    "uint8": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "uint8"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     }
   },
   "chunk_grid": {

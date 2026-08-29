@@ -313,6 +313,9 @@ function validateField(
   }
   const issues: RegistryIssue[] = [];
   if (!(name in registry[point])) {
+    // The core spec's raw-bits data types are a pattern (r8, r16, ...), not
+    // enumerable registry entries — recognized, nothing to validate.
+    if (point === "data_type" && /^r[1-9][0-9]*$/.test(name)) return issues;
     const suggestions = nearMisses(point, name);
     if (suggestions.length > 0) {
       issues.push({
