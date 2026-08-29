@@ -34,6 +34,20 @@ const VALIDATORS: ReadonlyMap<string, Validator> = new Map([
 
 const DEBOUNCE_MS = 300;
 
+/** The spec section a diagnostic's code links to, keyed by basename. */
+const SPEC_URLS: ReadonlyMap<string, string> = new Map([
+  ["zarr.json", "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html"],
+  [".zarray", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
+  [".zgroup", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
+  [".zattrs", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
+  [".zmetadata", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
+]);
+
+function codeFor(kind: string, basename: string): vscode.Diagnostic["code"] {
+  const url = SPEC_URLS.get(basename);
+  return url === undefined ? kind : { value: kind, target: vscode.Uri.parse(url) };
+}
+
 function validatorFor(document: vscode.TextDocument): Validator | undefined {
   if (document.languageId !== "json" && document.languageId !== "jsonc") return undefined;
   const basename = document.uri.path.split("/").pop() ?? "";
@@ -83,6 +97,7 @@ function toDiagnostic(
   document: vscode.TextDocument,
   root: Node,
   issue: PathedIssue,
+  basename: string,
 ): vscode.Diagnostic {
   const { range, fellBack } = rangeFor(document, root, issue);
   let message = issue.message;
@@ -95,7 +110,7 @@ function toDiagnostic(
   }
   const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
   diagnostic.source = "zarr";
-  diagnostic.code = issue.kind;
+  diagnostic.code = codeFor(issue.kind, basename);
   return diagnostic;
 }
 
@@ -117,8 +132,10 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     diagnostics.delete(document.uri);
     return;
   }
-  const items = flattenTree(validator(value)).map((issue) => toDiagnostic(document, root, issue));
   const basename = document.uri.path.split("/").pop() ?? "";
+  const items = flattenTree(validator(value)).map((issue) =>
+    toDiagnostic(document, root, issue, basename),
+  );
   if (basename === "zarr.json") {
     // Structurally valid, but most readers will refuse it: per the v3 spec
     // an unrecognized extension field must carry "must_understand": false
@@ -131,14 +148,16 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
         document.positionAt(keyNode.offset),
         document.positionAt(keyNode.offset + keyNode.length),
       );
+      // Kept to one clause so it reads as a sibling of other hover entries;
+      // the linked code carries the spec rationale (readers that do not
+      // recognize an unwaived extension field must refuse the node).
       const diagnostic = new vscode.Diagnostic(
         range,
-        `unrecognized field "${key}" is not waived with "must_understand": false; ` +
-          "implementations that do not recognize it must refuse to open this node",
+        'unrecognized extension field without a "must_understand": false waiver',
         vscode.DiagnosticSeverity.Warning,
       );
       diagnostic.source = "zarr";
-      diagnostic.code = "must_understand";
+      diagnostic.code = codeFor("must_understand", basename);
       items.push(diagnostic);
     }
   }

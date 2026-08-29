@@ -34,6 +34,7 @@ const vscode = {
     textDocuments: [],
   },
   Position, Range, Diagnostic,
+  Uri: { parse: (value) => ({ toString: () => value }) },
   DiagnosticSeverity: { Error: 0, Warning: 1 },
 };
 
