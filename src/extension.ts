@@ -12,14 +12,16 @@
 import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";
 import {
+  flattenTree,
   validateArrayMetadataV2,
   validateConsolidatedMetadataV2,
   validateGroupMetadataV2,
   validateMetadataV3,
-  type ValidationProblem,
+  type ErrorTree,
+  type PathedIssue,
 } from "zarr-metadata";
 
-type Validator = (value: unknown) => ValidationProblem[];
+type Validator = (value: unknown) => ErrorTree;
 
 /** Which validator handles a metadata file, keyed by basename. */
 const VALIDATORS: ReadonlyMap<string, Validator> = new Map([
@@ -46,13 +48,13 @@ function validatorFor(document: vscode.TextDocument): Validator | undefined {
 function rangeFor(
   document: vscode.TextDocument,
   root: Node,
-  problem: ValidationProblem,
+  issue: PathedIssue,
 ): { range: vscode.Range; fellBack: boolean } {
-  for (let end = problem.loc.length; end >= 0; end--) {
+  for (let end = issue.path.length; end >= 0; end--) {
     const node =
-      end === 0 ? root : findNodeAtLocation(root, problem.loc.slice(0, end) as (string | number)[]);
+      end === 0 ? root : findNodeAtLocation(root, issue.path.slice(0, end) as (string | number)[]);
     if (node === undefined) continue;
-    const fellBack = end < problem.loc.length;
+    const fellBack = end < issue.path.length;
     let start = document.positionAt(node.offset);
     let stop = document.positionAt(node.offset + node.length);
     if (fellBack && stop.line > start.line) {
@@ -66,20 +68,20 @@ function rangeFor(
 function toDiagnostic(
   document: vscode.TextDocument,
   root: Node,
-  problem: ValidationProblem,
+  issue: PathedIssue,
 ): vscode.Diagnostic {
-  const { range, fellBack } = rangeFor(document, root, problem);
-  let message = problem.message;
-  if (fellBack && problem.loc.length > 0) {
+  const { range, fellBack } = rangeFor(document, root, issue);
+  let message = issue.message;
+  if (fellBack && issue.path.length > 0) {
     // The range no longer identifies the offending path, so the message must.
     message =
-      problem.kind === "missing_key"
-        ? `missing required key: ${problem.loc.join(".")}`
-        : `${problem.loc.join(".")}: ${problem.message}`;
+      issue.kind === "missing_key"
+        ? `missing required key: ${issue.path.join(".")}`
+        : `${issue.path.join(".")}: ${issue.message}`;
   }
   const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
   diagnostic.source = "zarr";
-  diagnostic.code = problem.kind;
+  diagnostic.code = issue.kind;
   return diagnostic;
 }
 
@@ -103,7 +105,7 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
   }
   diagnostics.set(
     document.uri,
-    validator(value).map((problem) => toDiagnostic(document, root, problem)),
+    flattenTree(validator(value)).map((issue) => toDiagnostic(document, root, issue)),
   );
 }
 
