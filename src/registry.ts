@@ -24,7 +24,11 @@ import registry from "../schemas/extension-registry.json";
 type Point = "codecs" | "data_type" | "chunk_grid" | "chunk_key_encoding";
 
 /** A registry issue; `suggestion` marks heuristic did-you-mean warnings. */
-export type RegistryIssue = PathedIssue & { readonly suggestion?: boolean };
+export type RegistryIssue = PathedIssue & {
+  readonly suggestion?: boolean;
+  /** Per-extension documentation URL for the diagnostic's code link. */
+  readonly documentation?: string;
+};
 
 const POINT_NOUNS: Record<Point, string> = {
   codecs: "codec",
@@ -34,8 +38,21 @@ const POINT_NOUNS: Record<Point, string> = {
 };
 
 interface RegistrySchema {
-  properties?: { configuration?: object };
+  properties?: { configuration?: ConfigSchema };
   required?: string[];
+  documentation?: string;
+}
+
+interface ConfigSchema {
+  examples?: unknown[];
+  default?: unknown;
+  const?: unknown;
+  enum?: unknown[];
+  type?: string;
+  minimum?: number;
+  properties?: Record<string, ConfigSchema>;
+  required?: string[];
+  items?: ConfigSchema;
 }
 
 // Extensions whose configurations embed further codec pipelines to recurse into.
@@ -63,6 +80,52 @@ function configValidatorFor(point: Point, name: string): ValidateFunction | unde
 function configRequiredFor(point: Point, name: string): boolean {
   const schema = (registry[point] as Record<string, RegistrySchema | undefined>)[name];
   return schema?.required?.includes("configuration") ?? false;
+}
+
+function documentationFor(point: Point, name: string): string | undefined {
+  return (registry[point] as Record<string, RegistrySchema | undefined>)[name]?.documentation;
+}
+
+const UNDERIVABLE = Symbol("underivable");
+
+/** A sample value for `schema`, or UNDERIVABLE when no clean sample exists. */
+function sampleFor(schema: ConfigSchema | undefined): unknown {
+  if (schema === undefined) return UNDERIVABLE;
+  if (schema.examples !== undefined && schema.examples.length > 0) return schema.examples[0];
+  if (schema.default !== undefined) return schema.default;
+  if (schema.const !== undefined) return schema.const;
+  if (schema.enum !== undefined && schema.enum.length > 0) return schema.enum[0];
+  switch (schema.type) {
+    case "integer":
+    case "number":
+      return schema.minimum ?? 0;
+    case "boolean":
+      return false;
+    case "string":
+      return "";
+    case "array": {
+      const item = sampleFor(schema.items);
+      return item === UNDERIVABLE ? UNDERIVABLE : [item];
+    }
+    case "object": {
+      const out: Record<string, unknown> = {};
+      for (const key of schema.required ?? []) {
+        const item = sampleFor(schema.properties?.[key]);
+        if (item === UNDERIVABLE) return UNDERIVABLE;
+        out[key] = item;
+      }
+      return out;
+    }
+    default:
+      return UNDERIVABLE;
+  }
+}
+
+/** A rendered example configuration for the extension, when one can be built. */
+function exampleFor(point: Point, name: string): string | undefined {
+  const schema = (registry[point] as Record<string, RegistrySchema | undefined>)[name];
+  const sample = sampleFor(schema?.properties?.configuration);
+  return sample === UNDERIVABLE ? undefined : JSON.stringify(sample);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -183,10 +246,14 @@ function validateField(
       // Anchored on the field itself (which exists) rather than the absent
       // configuration key, so the message stays specific instead of being
       // rewritten by the range-fallback machinery.
+      const example = exampleFor(point, name);
       issues.push({
         path,
-        message: `${JSON.stringify(name)} requires a configuration`,
+        message:
+          `${JSON.stringify(name)} requires a configuration` +
+          (example === undefined ? "" : `, e.g. "configuration": ${example}`),
         kind: "missing_key",
+        documentation: documentationFor(point, name),
       });
     }
     return issues;
@@ -194,7 +261,12 @@ function validateField(
   if (!isPlainObject(configuration)) return issues; // structural layer's problem
   const validator = configValidatorFor(point, name);
   if (validator !== undefined && !validator(configuration)) {
-    issues.push(...prefix([...path, "configuration"], (validator.errors ?? []).map(toIssue)));
+    const documentation = documentationFor(point, name);
+    issues.push(
+      ...prefix([...path, "configuration"], (validator.errors ?? []).map(toIssue)).map(
+        (issue): RegistryIssue => ({ ...issue, documentation }),
+      ),
+    );
   }
   const nested = NESTED_PIPELINES.get(name);
   if (nested !== undefined) {

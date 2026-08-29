@@ -39,6 +39,21 @@
         "chunk_shape",
         "codecs",
         "index_codecs"
+      ],
+      "examples": [
+        {
+          "chunk_shape": [
+            32,
+            32
+          ],
+          "codecs": [
+            "bytes"
+          ],
+          "index_codecs": [
+            "bytes",
+            "crc32c"
+          ]
+        }
       ]
     }
   },

@@ -17,7 +17,12 @@
           ]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "examples": [
+        {
+          "separator": "/"
+        }
+      ]
     }
   },
   "required": [

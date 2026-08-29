@@ -151,7 +151,18 @@ function actionsFor(document, diagnostic) {
   expect((m) => m.includes('"start", "end"'), "sharding index_location enum");
   expect((m) => m.includes('"/", "."'), "chunk_key_encoding separator enum");
   expect((m) => m.includes('did you mean "bytes"'), "near-miss codec name suggestion");
-  expect((m) => m === '"gzip" requires a configuration', "bare codec needing a configuration");
+  expect(
+    (m) => m === '"gzip" requires a configuration, e.g. "configuration": {"level":5}',
+    "bare codec needing a configuration, with an example",
+  );
+  const gzip = diagnostics.find((d) => d.message.includes('"gzip" requires'));
+  if (!String(gzip.code.target).includes("codecs/gzip")) {
+    throw new Error(`gzip diagnostic should link to the gzip spec, got ${gzip.code.target}`);
+  }
+  const clevel = diagnostics.find((d) => d.message === "must be <= 9");
+  if (!String(clevel.code.target).includes("codecs/blosc")) {
+    throw new Error(`blosc config diagnostic should link to the blosc spec, got ${clevel.code.target}`);
+  }
   expect((m) => m === "missing required key: blocksize", "fallback names only the unresolved suffix");
   const suggestion = diagnostics.find((d) => d.message.includes("did you mean"));
   if (suggestion.severity !== 1) {

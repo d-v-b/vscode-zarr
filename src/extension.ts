@@ -151,6 +151,15 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     items.push(
       ...validateExtensionConfigurations(value).map((issue) => {
         const diagnostic = toDiagnostic(document, root, issue, basename);
+        if (issue.documentation !== undefined) {
+          // Registry issues link to the extension's own documentation (its
+          // zarr-specs page or zarr-extensions directory), not the generic
+          // core spec.
+          diagnostic.code = {
+            value: issue.kind,
+            target: vscode.Uri.parse(issue.documentation),
+          };
+        }
         if (issue.suggestion) {
           // A near-miss of a registered name is probably a typo, but the
           // extension name space is open — warn, don't condemn, and link

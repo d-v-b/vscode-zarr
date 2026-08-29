@@ -18,6 +18,11 @@
       "additionalProperties": false,
       "required": [
         "level"
+      ],
+      "examples": [
+        {
+          "level": 5
+        }
       ]
     }
   },

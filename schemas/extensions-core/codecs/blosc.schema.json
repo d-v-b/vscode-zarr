@@ -48,6 +48,14 @@
         "clevel",
         "shuffle",
         "blocksize"
+      ],
+      "examples": [
+        {
+          "cname": "zstd",
+          "clevel": 5,
+          "shuffle": "shuffle",
+          "blocksize": 0
+        }
       ]
     }
   },

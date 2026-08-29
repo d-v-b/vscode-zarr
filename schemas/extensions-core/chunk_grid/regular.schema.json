@@ -20,6 +20,14 @@
       "additionalProperties": false,
       "required": [
         "chunk_shape"
+      ],
+      "examples": [
+        {
+          "chunk_shape": [
+            64,
+            64
+          ]
+        }
       ]
     }
   },

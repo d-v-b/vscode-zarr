@@ -58,7 +58,12 @@ def fetch_vendored() -> dict[str, dict[str, object]]:
             continue
         extracted = archive.extractfile(member)
         assert extracted is not None, member.name
-        registry[POINTS[parts[1]]][parts[2]] = json.loads(extracted.read())
+        schema = json.loads(extracted.read())
+        schema["documentation"] = (
+            "https://github.com/zarr-developers/zarr-extensions/tree/main/"
+            f"{parts[1]}/{parts[2]}"
+        )
+        registry[POINTS[parts[1]]][parts[2]] = schema
     return registry
 
 
@@ -70,7 +75,11 @@ def merge_core(registry: dict[str, dict[str, object]]) -> None:
         assert name not in registry[point], (
             f"{point}/{name} is now in zarr-extensions; drop the core copy"
         )
-        registry[point][name] = json.loads(path.read_text())
+        schema = json.loads(path.read_text())
+        # Core schemas carry their zarr-specs page as the description.
+        if isinstance(schema.get("description"), str) and schema["description"].startswith("http"):
+            schema["documentation"] = schema["description"]
+        registry[point][name] = schema
 
 
 def main() -> None:
