@@ -21,7 +21,7 @@
     "extra": 1
   },
   "fill_value": 0,
-  "codecs": ["byt"],
+  "codecs": ["bytes", "gzip"],
   "dimension_names": [
     "y",
     null,

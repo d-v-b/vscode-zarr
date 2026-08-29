@@ -52,6 +52,7 @@
         ],
         "index_location": "middle"
       }
-    }
+    },
+    "gzip"
   ]
 }

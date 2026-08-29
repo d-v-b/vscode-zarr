@@ -180,9 +180,12 @@ function validateField(
   }
   if (configuration === undefined) {
     if (configRequiredFor(point, name)) {
+      // Anchored on the field itself (which exists) rather than the absent
+      // configuration key, so the message stays specific instead of being
+      // rewritten by the range-fallback machinery.
       issues.push({
-        path: [...path, "configuration"],
-        message: `missing required key ("${name}" requires a configuration)`,
+        path,
+        message: `${JSON.stringify(name)} requires a configuration`,
         kind: "missing_key",
       });
     }

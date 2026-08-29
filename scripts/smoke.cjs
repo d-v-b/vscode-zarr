@@ -151,13 +151,15 @@ function actionsFor(document, diagnostic) {
   expect((m) => m.includes('"start", "end"'), "sharding index_location enum");
   expect((m) => m.includes('"/", "."'), "chunk_key_encoding separator enum");
   expect((m) => m.includes('did you mean "bytes"'), "near-miss codec name suggestion");
+  expect((m) => m === '"gzip" requires a configuration', "bare codec needing a configuration");
+  expect((m) => m === "missing required key: blocksize", "fallback names only the unresolved suffix");
   const suggestion = diagnostics.find((d) => d.message.includes("did you mean"));
   if (suggestion.severity !== 1) {
     throw new Error("bad_codecs: the did-you-mean suggestion must be a warning, not an error");
   }
-  if (diagnostics.length !== 7) {
+  if (diagnostics.length !== 8) {
     console.error(messages);
-    throw new Error(`bad_codecs: expected exactly 7 diagnostics, got ${diagnostics.length}`);
+    throw new Error(`bad_codecs: expected exactly 8 diagnostics, got ${diagnostics.length}`);
   }
 }
 

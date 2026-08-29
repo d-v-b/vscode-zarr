@@ -75,7 +75,7 @@ function rangeFor(
   document: vscode.TextDocument,
   root: Node,
   issue: PathedIssue,
-): { range: vscode.Range; fellBack: boolean } {
+): { range: vscode.Range; resolvedDepth: number } {
   for (let end = issue.path.length; end >= 0; end--) {
     const node =
       end === 0 ? root : findNodeAtLocation(root, issue.path.slice(0, end) as (string | number)[]);
@@ -94,9 +94,9 @@ function rangeFor(
     if (fellBack && stop.line > start.line) {
       stop = document.lineAt(start.line).range.end;
     }
-    return { range: new vscode.Range(start, stop), fellBack };
+    return { range: new vscode.Range(start, stop), resolvedDepth: end };
   }
-  return { range: new vscode.Range(0, 0, 0, 0), fellBack: true };
+  return { range: new vscode.Range(0, 0, 0, 0), resolvedDepth: 0 };
 }
 
 function toDiagnostic(
@@ -105,14 +105,15 @@ function toDiagnostic(
   issue: PathedIssue,
   basename: string,
 ): vscode.Diagnostic {
-  const { range, fellBack } = rangeFor(document, root, issue);
+  const { range, resolvedDepth } = rangeFor(document, root, issue);
   let message = issue.message;
-  if (fellBack && issue.path.length > 0) {
-    // The range no longer identifies the offending path, so the message must.
+  if (resolvedDepth < issue.path.length) {
+    // The range identifies the nearest existing ancestor; the message names
+    // only the unresolved remainder of the path relative to it (usually a
+    // single missing key), not the full dotted chain.
+    const suffix = issue.path.slice(resolvedDepth).join(".");
     message =
-      issue.kind === "missing_key"
-        ? `missing required key: ${issue.path.join(".")}`
-        : `${issue.path.join(".")}: ${issue.message}`;
+      issue.kind === "missing_key" ? `missing required key: ${suffix}` : `${suffix}: ${issue.message}`;
   }
   const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
   diagnostic.source = "zarr";
