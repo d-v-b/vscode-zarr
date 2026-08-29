@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vscode-zarr
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: vscode-zarr
+      # The zarr-metadata dependency is a sibling checkout
+      # (file:../zarr-metadata-ts) until the library is published to npm;
+      # CI reproduces that layout. Once the library is on npm, switch the
+      # dependency to a semver range and drop these two steps.
+      - uses: actions/checkout@v4
+        with:
+          repository: zarr-developers/zarr-metadata-ts
+          path: zarr-metadata-ts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build the zarr-metadata library
+        working-directory: zarr-metadata-ts
+        run: npm ci && npm run build
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Package a .vsix (dry run of the release artifact)
+        run: npx --yes @vscode/vsce package --no-dependencies
