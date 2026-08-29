@@ -3,8 +3,10 @@
  *
  * This module is the ONLY source of validation diagnostics: it runs the
  * zarr-metadata validators (a port of the Python reference implementation)
- * and maps each pathed issue to a precise text range, so every problem has
- * one voice, one range convention, and a spec-linked code. The schemas the
+ * plus the registry layer (src/registry.ts — extension-point configuration
+ * schemas through an embedded Ajv) and maps each pathed issue to a precise
+ * text range, so every problem has one voice, one range convention, and a
+ * spec-linked code. The schemas the
  * extension contributes (contributes.jsonValidation) are deliberately
  * docs-only — stripped of assertion keywords at generation time — and exist
  * purely to power completions and hover documentation through VS Code's
@@ -12,6 +14,8 @@
  */
 import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";
+
+import { validateExtensionConfigurations } from "./registry.js";
 import {
   flattenTree,
   mustUnderstandExtensionFieldsV3,
@@ -138,6 +142,15 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     toDiagnostic(document, root, issue, basename),
   );
   if (basename === "zarr.json") {
+    // Registry layer: recognized extension-point configurations (codecs,
+    // chunk grid, chunk key encoding, data type) validated against the
+    // vendored zarr-extensions + core-spec schemas, through the same
+    // pipeline so every diagnostic keeps one voice.
+    items.push(
+      ...validateExtensionConfigurations(value).map((issue) =>
+        toDiagnostic(document, root, issue, basename),
+      ),
+    );
     // Structurally valid, but most readers will refuse it: per the v3 spec
     // an unrecognized extension field must carry "must_understand": false
     // to be ignorable, so obligated extras get a warning on the key.

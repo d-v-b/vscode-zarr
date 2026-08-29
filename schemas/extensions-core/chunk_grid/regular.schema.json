@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "regular"
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "chunk_shape": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "chunk_shape"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "configuration"
+  ],
+  "additionalProperties": false,
+  "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#regular-grids"
+}

@@ -1,0 +1,1839 @@
+{
+  "source": {
+    "repository": "zarr-developers/zarr-extensions",
+    "commit": "4da7b37a84f76e660902f6d3de3eaef0e0febae6"
+  },
+  "codecs": {
+    "bitround": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "bitround"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "keepbits": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "keepbits"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "blosc": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "blosc"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "cname": {
+              "type": "string",
+              "enum": [
+                "lz4",
+                "lz4hc",
+                "blosclz",
+                "snappy",
+                "zlib",
+                "zstd"
+              ]
+            },
+            "clevel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            },
+            "shuffle": {
+              "type": "string",
+              "enum": [
+                "noshuffle",
+                "shuffle",
+                "bitshuffle"
+              ]
+            },
+            "blocksize": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "typesize": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "cname",
+            "clevel",
+            "shuffle",
+            "blocksize"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html"
+    },
+    "bytes": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "bytes"
+            },
+            "configuration": {
+              "type": "object",
+              "properties": {
+                "endian": {
+                  "type": "string",
+                  "enum": [
+                    "little",
+                    "big"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "type": "string",
+          "const": "bytes"
+        }
+      ]
+    },
+    "cast_value": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "cast_value"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "data_type": {
+              "type": [
+                "string",
+                "object"
+              ]
+            },
+            "rounding": {
+              "enum": [
+                "nearest-even",
+                "towards-zero",
+                "towards-positive",
+                "towards-negative",
+                "nearest-away"
+              ]
+            },
+            "out_of_range": {
+              "enum": [
+                "clamp",
+                "wrap"
+              ]
+            },
+            "scalar_map": {
+              "type": "object",
+              "properties": {
+                "encode": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
+                "decode": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "data_type"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "crc32c": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "crc32c"
+        },
+        "configuration": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/crc32c/index.html"
+    },
+    "gzip": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "gzip"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "level"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/gzip/index.html"
+    },
+    "n5_default": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "n5_default"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "codecs": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "$ref": "https://raw.githubusercontent.com/zarr-developers/zarr-extensions/refs/heads/main/codecs/transpose/schema.json"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "https://raw.githubusercontent.com/zarr-developers/zarr-extensions/refs/heads/main/codecs/bytes/schema.json"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "configuration": {
+                          "type": "object",
+                          "properties": {
+                            "endian": {
+                              "type": "string",
+                              "const": "big"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "items": {
+                "type": "#/$defs/codec"
+              },
+              "maxItems": 3
+            }
+          },
+          "required": [
+            "codecs"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "codec": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "configuration": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "packbits": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "packbits"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "padding_encoding": {
+              "enum": [
+                "start_byte",
+                "end_byte",
+                "none"
+              ],
+              "default": "none"
+            },
+            "start_bit": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "const": null
+                }
+              ]
+            },
+            "end_bit": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "const": null
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "reshape": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "reshape"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "shape": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -1
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "shape"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "scale_offset": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "scale_offset"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "offset": {},
+            "scale": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "sharding_indexed": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "sharding_indexed"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "chunk_shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "codecs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {}
+            },
+            "index_codecs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {}
+            },
+            "index_location": {
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "chunk_shape",
+            "codecs",
+            "index_codecs"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/sharding-indexed/index.html"
+    },
+    "transpose": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "transpose"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "order": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "range": {
+                  "min": 0
+                }
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "order"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "configuration"
+      ]
+    },
+    "vlen-bytes": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "vlen-bytes"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "vlen-bytes"
+        }
+      ]
+    },
+    "vlen-utf8": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "vlen-utf8"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "vlen-utf8"
+        }
+      ]
+    },
+    "zfp": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "zfp"
+            },
+            "configuration": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "reversible"
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "expert"
+                    },
+                    "minbits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxbits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "maxprec": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "minexp": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "minbits",
+                    "maxbits",
+                    "maxprec",
+                    "minexp"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "fixed_accuracy"
+                    },
+                    "tolerance": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "tolerance"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "fixed_rate"
+                    },
+                    "rate": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "rate"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "fixed_precision"
+                    },
+                    "precision": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "precision"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "configuration"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "zstd": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "zstd"
+          ]
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "number",
+              "minimum": -131072,
+              "maximum": 22
+            },
+            "checksum": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "data_type": {
+    "bfloat16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "bfloat16"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "bfloat16"
+        }
+      ]
+    },
+    "bytes": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "bytes"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "bytes"
+        }
+      ]
+    },
+    "complex_bfloat16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "complex_bfloat16"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "complex_bfloat16"
+        }
+      ]
+    },
+    "complex_float16": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "complex_float16"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "complex_float16"
+        }
+      ]
+    },
+    "complex_float32": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "complex_float32"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "complex_float32"
+        }
+      ]
+    },
+    "complex_float4_e2m1fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "complex_float64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "complex_float64"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "complex_float64"
+        }
+      ]
+    },
+    "complex_float6_e2m3fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "complex_float6_e3m2fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "complex_float8_e3m4": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e3m4"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e3m4"
+        }
+      ]
+    },
+    "complex_float8_e4m3": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3"
+        }
+      ]
+    },
+    "complex_float8_e4m3b11fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3b11fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3b11fnuz"
+        }
+      ]
+    },
+    "complex_float8_e4m3fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3fnuz"
+        }
+      ]
+    },
+    "complex_float8_e5m2": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "complex_float8_e5m2fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e5m2fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e5m2fnuz"
+        }
+      ]
+    },
+    "complex_float8_e8m0fnu": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "fixed_length_utf32": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "fixed_length_utf32"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "length_bytes": {
+              "type": "integer",
+              "minimum": 4,
+              "multipleOf": 4
+            }
+          },
+          "required": [
+            "length_bytes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "float4_e2m1fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float4_e2m1fn"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float4_e2m1fn"
+        }
+      ]
+    },
+    "float6_e2m3fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float6_e2m3fn"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float6_e2m3fn"
+        }
+      ]
+    },
+    "float6_e3m2fn": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float6_e3m2fn"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float6_e3m2fn"
+        }
+      ]
+    },
+    "float8_e3m4": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e3m4"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e3m4"
+        }
+      ]
+    },
+    "float8_e4m3": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3"
+        }
+      ]
+    },
+    "float8_e4m3b11fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3b11fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3b11fnuz"
+        }
+      ]
+    },
+    "float8_e4m3fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e4m3fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e4m3fnuz"
+        }
+      ]
+    },
+    "float8_e5m2": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e5m2"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e5m2"
+        }
+      ]
+    },
+    "float8_e5m2fnuz": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e5m2fnuz"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e5m2fnuz"
+        }
+      ]
+    },
+    "float8_e8m0fnu": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "float8_e8m0fnu"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "float8_e8m0fnu"
+        }
+      ]
+    },
+    "int2": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "int2"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "int2"
+        }
+      ]
+    },
+    "int4": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "int4"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "int4"
+        }
+      ]
+    },
+    "numpy.datetime64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "datetime64",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "numpy.datetime64"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string",
+              "enum": [
+                "Y",
+                "M",
+                "W",
+                "D",
+                "h",
+                "m",
+                "s",
+                "ms",
+                "us",
+                "\u03bcs",
+                "ns",
+                "ps",
+                "fs",
+                "as",
+                "generic"
+              ]
+            },
+            "scale_factor": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "unit",
+            "scale_factor"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "numpy.timedelta64": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "timedelta64",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "numpy.timedelta64"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string",
+              "enum": [
+                "Y",
+                "M",
+                "W",
+                "D",
+                "h",
+                "m",
+                "s",
+                "ms",
+                "us",
+                "\u03bcs",
+                "ns",
+                "ps",
+                "fs",
+                "as",
+                "generic"
+              ]
+            },
+            "scale_factor": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "unit",
+            "scale_factor"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "string": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "string"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "string"
+        }
+      ]
+    },
+    "struct": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "struct",
+      "$defs": {
+        "dtype": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "configuration": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "struct"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "data_type": {
+                    "$ref": "#/$defs/dtype"
+                  }
+                },
+                "required": [
+                  "name",
+                  "data_type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "fields"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "uint2": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "uint2"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "uint2"
+        }
+      ]
+    },
+    "uint4": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "uint4"
+            },
+            "configuration": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": "uint4"
+        }
+      ]
+    }
+  },
+  "chunk_grid": {
+    "rectilinear": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "RectilinearChunkGridMetadata",
+      "type": "object",
+      "properties": {
+        "configuration": {
+          "$ref": "#/$defs/RectilinearChunkGridConfiguration"
+        },
+        "name": {
+          "$ref": "#/$defs/rectilinear"
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "$defs": {
+        "ChunkEdgeLength": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/InnerChunkEdgeLength"
+              }
+            }
+          ]
+        },
+        "InnerChunkEdgeLength": {
+          "anyOf": [
+            {
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer",
+                  "format": "uint",
+                  "minimum": 1
+                },
+                {
+                  "type": "integer",
+                  "format": "uint",
+                  "minimum": 1
+                }
+              ]
+            },
+            {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1
+            }
+          ]
+        },
+        "RectilinearChunkGridConfiguration": {
+          "type": "object",
+          "properties": {
+            "chunk_shapes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ChunkEdgeLength"
+              }
+            },
+            "kind": {
+              "$ref": "#/$defs/inline"
+            }
+          },
+          "required": [
+            "kind",
+            "chunk_shapes"
+          ]
+        },
+        "inline": {
+          "const": "inline"
+        },
+        "rectilinear": {
+          "const": "rectilinear"
+        }
+      }
+    },
+    "regular": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "regular"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "chunk_shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "chunk_shape"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "configuration"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#regular-grids"
+    }
+  },
+  "chunk_key_encoding": {
+    "default": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "default"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "separator": {
+              "type": "string",
+              "enum": [
+                "/",
+                "."
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding"
+    },
+    "v2": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "v2"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "separator": {
+              "type": "string",
+              "enum": [
+                "/",
+                "."
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding"
+    }
+  }
+}

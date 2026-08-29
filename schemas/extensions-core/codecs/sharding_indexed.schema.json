@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "sharding_indexed"
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "chunk_shape": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "codecs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {}
+        },
+        "index_codecs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {}
+        },
+        "index_location": {
+          "type": "string",
+          "enum": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "chunk_shape",
+        "codecs",
+        "index_codecs"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "configuration"
+  ],
+  "additionalProperties": false,
+  "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/sharding-indexed/index.html"
+}

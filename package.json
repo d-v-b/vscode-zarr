@@ -62,6 +62,7 @@
     "smoke": "npm run build && node scripts/smoke.cjs"
   },
   "dependencies": {
+    "ajv": "^8.20.0",
     "jsonc-parser": "^3.3.0",
     "zarr-metadata": "^0.2.0"
   },

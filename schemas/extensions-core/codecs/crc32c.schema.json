@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "crc32c"
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false,
+  "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/crc32c/index.html"
+}

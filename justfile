@@ -30,6 +30,12 @@ check: typecheck smoke
 package: build
     npx --yes @vscode/vsce package --no-dependencies
 
+# Rebuild schemas/extension-registry.json: the zarr-extensions registry
+# vendored at the commit pinned in the script, merged with the core-spec
+# schemas in schemas/extensions-core/
+registry-schemas:
+    python3 scripts/fetch_extension_schemas.py
+
 # Regenerate the JSON Schemas from the Python zarr-metadata package.
 # `ref` is what `uv run --with` installs: the PyPI package by default, or a
 # path to a local zarr-python checkout's packages/zarr-metadata, e.g.

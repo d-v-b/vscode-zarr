@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "blosc"
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "cname": {
+          "type": "string",
+          "enum": [
+            "lz4",
+            "lz4hc",
+            "blosclz",
+            "snappy",
+            "zlib",
+            "zstd"
+          ]
+        },
+        "clevel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "shuffle": {
+          "type": "string",
+          "enum": [
+            "noshuffle",
+            "shuffle",
+            "bitshuffle"
+          ]
+        },
+        "blocksize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "typesize": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cname",
+        "clevel",
+        "shuffle",
+        "blocksize"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "configuration"
+  ],
+  "additionalProperties": false,
+  "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html"
+}

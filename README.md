@@ -25,6 +25,13 @@ Validation, hover documentation, and completions for
   - a warning for unrecognized v3 extension fields not waived with
     `"must_understand": false` — the spec obligates readers to refuse
     nodes carrying such fields
+- **Extension-point configuration validation**: recognized codec, chunk
+  grid, chunk key encoding, and data type configurations are validated
+  against the [zarr-extensions](https://github.com/zarr-developers/zarr-extensions)
+  registry's schemas (vendored at a pinned commit, plus core-spec schemas
+  the registry does not carry), including codec pipelines nested inside
+  `sharding_indexed`. Unknown extension names are left alone — the name
+  space is open.
 
 Every diagnostic comes from the same engine, covers the offending
 property, and carries a code linking to the relevant spec section.

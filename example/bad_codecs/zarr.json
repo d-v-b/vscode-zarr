@@ -1,0 +1,24 @@
+{
+  "zarr_format": 3,
+  "node_type": "array",
+  "shape": [64, 64],
+  "data_type": "float64",
+  "chunk_grid": { "name": "regular", "configuration": { "chunk_shape": [32, 32] } },
+  "chunk_key_encoding": { "name": "default", "configuration": { "separator": "-" } },
+  "fill_value": 0,
+  "codecs": [
+    {
+      "name": "blosc",
+      "configuration": { "cname": "zzz", "clevel": 99, "shuffle": "shuffle" }
+    },
+    {
+      "name": "sharding_indexed",
+      "configuration": {
+        "chunk_shape": [16, 16],
+        "codecs": [{ "name": "gzip", "configuration": { "level": 42 } }],
+        "index_codecs": ["bytes", "crc32c"],
+        "index_location": "middle"
+      }
+    }
+  ]
+}
