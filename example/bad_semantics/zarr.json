@@ -1,0 +1,20 @@
+{
+  "zarr_format": 3,
+  "node_type": "array",
+  "shape": [12, 12],
+  "data_type": "int32",
+  "chunk_grid": { "name": "regular", "configuration": { "chunk_shape": [5, 12] } },
+  "chunk_key_encoding": "default",
+  "fill_value": "NaN",
+  "codecs": [
+    { "name": "transpose", "configuration": { "order": [0, 2] } },
+    {
+      "name": "sharding_indexed",
+      "configuration": {
+        "chunk_shape": [4, 4],
+        "codecs": ["bytes"],
+        "index_codecs": ["bytes", "crc32c"]
+      }
+    }
+  ]
+}

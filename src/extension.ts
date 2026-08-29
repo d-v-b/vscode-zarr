@@ -21,6 +21,7 @@ import {
   flattenTree,
   mustUnderstandExtensionFieldsV3,
   validateArrayMetadataV2,
+  validateArraySemanticsV3,
   validateConsolidatedMetadataV2,
   validateGroupMetadataV2,
   validateMetadataV3,
@@ -144,6 +145,15 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     toDiagnostic(document, root, issue, basename),
   );
   if (basename === "zarr.json") {
+    // Semantic layer (from the zarr-metadata library): cross-field rules
+    // over the well-known core extension points — chunk grid arity,
+    // transpose permutations, sharding divisibility, fill_value vs data
+    // type.
+    items.push(
+      ...flattenTree(validateArraySemanticsV3(value)).map((issue) =>
+        toDiagnostic(document, root, issue, basename),
+      ),
+    );
     // Registry layer: recognized extension-point configurations (codecs,
     // chunk grid, chunk key encoding, data type) validated against the
     // vendored zarr-extensions + core-spec schemas, through the same

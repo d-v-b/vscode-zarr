@@ -195,6 +195,21 @@ function actionsFor(document, diagnostic) {
   }
 }
 
+// --- bad_semantics: the library's cross-field semantic layer --------------
+{
+  const { diagnostics } = run("bad_semantics");
+  const messages = diagnostics.map((d) => d.message).sort();
+  const expected = [
+    'expected [4,4] to evenly divide the outer chunk shape [5,12]',
+    'expected a permutation of the integers 0..1',
+    'expected an integer in [-2147483648, 2147483647] for data type "int32"',
+  ];
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
+    console.error(messages);
+    throw new Error("bad_semantics: semantic diagnostics did not match expectations");
+  }
+}
+
 // --- quick fixes ----------------------------------------------------------
 {
   // "Change to \"bytes\"" on the did-you-mean warning repairs the name.
