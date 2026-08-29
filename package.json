@@ -25,11 +25,26 @@
   ],
   "contributes": {
     "jsonValidation": [
-      { "fileMatch": "**/zarr.json", "url": "./schemas/zarr3.schema.json" },
-      { "fileMatch": "**/.zarray", "url": "./schemas/zarr2-array.schema.json" },
-      { "fileMatch": "**/.zgroup", "url": "./schemas/zarr2-group.schema.json" },
-      { "fileMatch": "**/.zattrs", "url": "./schemas/zarr2-attrs.schema.json" },
-      { "fileMatch": "**/.zmetadata", "url": "./schemas/zarr2-consolidated.schema.json" }
+      {
+        "fileMatch": "**/zarr.json",
+        "url": "./schemas/zarr3.schema.json"
+      },
+      {
+        "fileMatch": "**/.zarray",
+        "url": "./schemas/zarr2-array.schema.json"
+      },
+      {
+        "fileMatch": "**/.zgroup",
+        "url": "./schemas/zarr2-group.schema.json"
+      },
+      {
+        "fileMatch": "**/.zattrs",
+        "url": "./schemas/zarr2-attrs.schema.json"
+      },
+      {
+        "fileMatch": "**/.zmetadata",
+        "url": "./schemas/zarr2-consolidated.schema.json"
+      }
     ],
     "configurationDefaults": {
       "files.associations": {
@@ -54,5 +69,12 @@
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zarr-developers/vscode-zarr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zarr-developers/vscode-zarr/issues"
   }
 }
