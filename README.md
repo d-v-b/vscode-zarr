@@ -39,17 +39,21 @@ The extension depends on the TypeScript
 resolved from a sibling checkout (`file:../zarr-metadata-ts`) until it is
 published to npm.
 
+Development verbs live in the [justfile](justfile) (needs
+[`just`](https://github.com/casey/just), plus `uv` for the schemas
+recipe); `just` with no arguments lists them:
+
 ```bash
-npm install
-npm run build        # esbuild → dist/extension.js
-npm run typecheck
+just install       # npm install (links the sibling zarr-metadata checkout)
+just build         # esbuild → dist/extension.js
+just typecheck
+just check         # everything CI runs
+just package       # build a .vsix
+just schemas       # regenerate the JSON Schemas from the Python package
 ```
 
 Press **F5** in VS Code to launch the extension against the deliberately
-valid-and-broken documents in `example/`.
+valid-and-broken documents in `example/`. Each recipe wraps a plain
+npm/npx/uv command, so `just` itself is optional.
 
-Regenerate the JSON Schemas after a zarr-metadata change (needs `uv`):
-
-```bash
-uv run --with 'pydantic>=2.13' --with zarr-metadata --no-project python scripts/generate_schemas.py
-```
+Releases are tag-driven; see [RELEASING.md](RELEASING.md).
