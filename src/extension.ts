@@ -13,6 +13,7 @@ import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";
 import {
   flattenTree,
+  mustUnderstandExtensionFieldsV3,
   validateArrayMetadataV2,
   validateConsolidatedMetadataV2,
   validateGroupMetadataV2,
@@ -103,10 +104,32 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     diagnostics.delete(document.uri);
     return;
   }
-  diagnostics.set(
-    document.uri,
-    flattenTree(validator(value)).map((issue) => toDiagnostic(document, root, issue)),
-  );
+  const items = flattenTree(validator(value)).map((issue) => toDiagnostic(document, root, issue));
+  const basename = document.uri.path.split("/").pop() ?? "";
+  if (basename === "zarr.json") {
+    // Structurally valid, but most readers will refuse it: per the v3 spec
+    // an unrecognized extension field must carry "must_understand": false
+    // to be ignorable, so obligated extras get a warning on the key.
+    for (const key of mustUnderstandExtensionFieldsV3(value)) {
+      const valueNode = findNodeAtLocation(root, [key]);
+      const keyNode = valueNode?.parent?.children?.[0] ?? valueNode;
+      if (keyNode === undefined) continue;
+      const range = new vscode.Range(
+        document.positionAt(keyNode.offset),
+        document.positionAt(keyNode.offset + keyNode.length),
+      );
+      const diagnostic = new vscode.Diagnostic(
+        range,
+        `unrecognized field "${key}" is not waived with "must_understand": false; ` +
+          "implementations that do not recognize it must refuse to open this node",
+        vscode.DiagnosticSeverity.Warning,
+      );
+      diagnostic.source = "zarr";
+      diagnostic.code = "must_understand";
+      items.push(diagnostic);
+    }
+  }
+  diagnostics.set(document.uri, items);
 }
 
 export function activate(context: vscode.ExtensionContext): void {

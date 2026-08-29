@@ -21,6 +21,9 @@ Validation, hover documentation, and completions for
   - non-empty codec pipelines, `must_understand` rules at each extension
     point, closed metadata-field envelopes
   - deep validation of inline `consolidated_metadata` entries
+  - a warning for unrecognized v3 extension fields not waived with
+    `"must_understand": false` — the spec obligates readers to refuse
+    nodes carrying such fields
 
 Every diagnostic is placed on the exact offending value (source: `zarr`).
 
