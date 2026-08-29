@@ -168,9 +168,30 @@ function actionsFor(document, diagnostic) {
   if (suggestion.severity !== 1) {
     throw new Error("bad_codecs: the did-you-mean suggestion must be a warning, not an error");
   }
-  if (diagnostics.length !== 8) {
+  expect(
+    (m) => m === '"blosc" (bytes -> bytes) must come after the array -> bytes codec',
+    "bytes->bytes codec before the array->bytes stage",
+  );
+  expect(
+    (m) => m === 'expected exactly one array -> bytes codec in the pipeline (e.g. "bytes")',
+    "sharding inner pipeline missing its array->bytes codec",
+  );
+  if (diagnostics.length !== 11) {
     console.error(messages);
-    throw new Error(`bad_codecs: expected exactly 8 diagnostics, got ${diagnostics.length}`);
+    throw new Error(`bad_codecs: expected exactly 11 diagnostics, got ${diagnostics.length}`);
+  }
+}
+
+// --- bad_pipeline: codec composition rule ---------------------------------
+{
+  const { diagnostics } = run("bad_pipeline");
+  const messages = diagnostics.map((d) => d.message);
+  if (
+    messages.length !== 1 ||
+    messages[0] !== '"transpose" (array -> array) must come before the array -> bytes codec'
+  ) {
+    console.error(messages);
+    throw new Error("bad_pipeline: expected exactly the transpose-after-bytes diagnostic");
   }
 }
 

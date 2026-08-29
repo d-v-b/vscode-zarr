@@ -37,10 +37,19 @@ const POINT_NOUNS: Record<Point, string> = {
   chunk_key_encoding: "chunk key encoding",
 };
 
+type PipelineStage = "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
+
+const STAGE_LABELS: Record<PipelineStage, string> = {
+  array_to_array: "array -> array",
+  array_to_bytes: "array -> bytes",
+  bytes_to_bytes: "bytes -> bytes",
+};
+
 interface RegistrySchema {
   properties?: { configuration?: ConfigSchema };
   required?: string[];
   documentation?: string;
+  pipelineStage?: PipelineStage;
 }
 
 interface ConfigSchema {
@@ -48,7 +57,7 @@ interface ConfigSchema {
   default?: unknown;
   const?: unknown;
   enum?: unknown[];
-  type?: string;
+  type?: string | string[];
   minimum?: number;
   properties?: Record<string, ConfigSchema>;
   required?: string[];
@@ -86,6 +95,81 @@ function documentationFor(point: Point, name: string): string | undefined {
   return (registry[point] as Record<string, RegistrySchema | undefined>)[name]?.documentation;
 }
 
+function stageFor(name: string): PipelineStage | undefined {
+  return (registry.codecs as Record<string, RegistrySchema | undefined>)[name]?.pipelineStage;
+}
+
+function codecName(field: unknown): string | undefined {
+  if (typeof field === "string") return field;
+  if (isPlainObject(field) && typeof field["name"] === "string") return field["name"];
+  return undefined;
+}
+
+/**
+ * Enforce the core spec's pipeline composition: zero or more array -> array
+ * codecs, exactly one array -> bytes codec, zero or more bytes -> bytes
+ * codecs, in that order. A pipeline containing any codec with an unknown
+ * stage is skipped wholesale — its unknown members could legitimately fill
+ * any role, so every check here would risk a false positive.
+ */
+function validatePipeline(
+  pipeline: unknown[],
+  path: ReadonlyArray<string | number>,
+): RegistryIssue[] {
+  if (pipeline.length === 0) return []; // the structural layer already reports empty codecs
+  const stages: (PipelineStage | undefined)[] = pipeline.map((field) => {
+    const name = codecName(field);
+    return name === undefined ? undefined : stageFor(name);
+  });
+  if (stages.some((stage) => stage === undefined)) return [];
+  const issues: RegistryIssue[] = [];
+  let seenArrayToBytes = false;
+  let seenBytesToBytes = false;
+  // One ordering diagnostic per pipeline: a single misplaced codec makes
+  // every later codec "misplaced" relative to it, and reporting the cascade
+  // buries the root cause.
+  let orderingReported = false;
+  const report = (issue: RegistryIssue): void => {
+    if (!orderingReported) issues.push(issue);
+    orderingReported = true;
+  };
+  pipeline.forEach((field, index) => {
+    const stage = stages[index] as PipelineStage;
+    const name = codecName(field) as string;
+    if (stage === "array_to_array" && (seenArrayToBytes || seenBytesToBytes)) {
+      report({
+        path: [...path, index],
+        message: `${JSON.stringify(name)} (array -> array) must come before the array -> bytes codec`,
+        kind: "invalid_value",
+      });
+    } else if (stage === "array_to_bytes" && (seenArrayToBytes || seenBytesToBytes)) {
+      report({
+        path: [...path, index],
+        message: seenArrayToBytes
+          ? `second array -> bytes codec (a pipeline has exactly one)`
+          : `${JSON.stringify(name)} (array -> bytes) must come before the bytes -> bytes codecs`,
+        kind: "invalid_value",
+      });
+    } else if (stage === "bytes_to_bytes" && !seenArrayToBytes) {
+      report({
+        path: [...path, index],
+        message: `${JSON.stringify(name)} (bytes -> bytes) must come after the array -> bytes codec`,
+        kind: "invalid_value",
+      });
+    }
+    if (stage === "array_to_bytes") seenArrayToBytes = true;
+    if (stage === "bytes_to_bytes") seenBytesToBytes = true;
+  });
+  if (!seenArrayToBytes) {
+    issues.push({
+      path: [...path],
+      message: 'expected exactly one array -> bytes codec in the pipeline (e.g. "bytes")',
+      kind: "invalid_value",
+    });
+  }
+  return issues;
+}
+
 const UNDERIVABLE = Symbol("underivable");
 
 /** A sample value for `schema`, or UNDERIVABLE when no clean sample exists. */
@@ -95,7 +179,8 @@ function sampleFor(schema: ConfigSchema | undefined): unknown {
   if (schema.default !== undefined) return schema.default;
   if (schema.const !== undefined) return schema.const;
   if (schema.enum !== undefined && schema.enum.length > 0) return schema.enum[0];
-  switch (schema.type) {
+  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  switch (type) {
     case "integer":
     case "number":
       return schema.minimum ?? 0;
@@ -276,6 +361,7 @@ function validateField(
       pipeline.forEach((entry, index) => {
         issues.push(...validateField("codecs", entry, [...path, "configuration", key, index]));
       });
+      issues.push(...validatePipeline(pipeline, [...path, "configuration", key]));
     }
   }
   return issues;
@@ -297,6 +383,7 @@ export function validateExtensionConfigurations(value: unknown): RegistryIssue[]
     codecs.forEach((entry, index) => {
       issues.push(...validateField("codecs", entry, ["codecs", index]));
     });
+    issues.push(...validatePipeline(codecs, ["codecs"]));
   }
   return issues;
 }

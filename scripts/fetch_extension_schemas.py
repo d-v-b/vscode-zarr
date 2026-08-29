@@ -35,6 +35,25 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE_DIR = ROOT / "schemas" / "extensions-core"
 OUT_PATH = ROOT / "schemas" / "extension-registry.json"
 
+# Which pipeline stage each known codec occupies. Sources: the codec's
+# zarr-specs page for the core codecs, its zarr-extensions README otherwise
+# ("Defines an `array -> array` codec ..."). The pipeline rule (array->array*,
+# exactly one array->bytes, bytes->bytes*) is checked by the diagnostics
+# engine; codecs absent from this map get no pipeline checks at all.
+CODEC_STAGES = {
+    "array_to_array": ["transpose", "bitround", "reshape", "scale_offset", "cast_value"],
+    "array_to_bytes": [
+        "bytes",
+        "sharding_indexed",
+        "zfp",
+        "packbits",
+        "n5_default",
+        "vlen-utf8",
+        "vlen-bytes",
+    ],
+    "bytes_to_bytes": ["blosc", "gzip", "zstd", "crc32c"],
+}
+
 # zarr-extensions directory -> the metadata extension point it configures.
 POINTS = {
     "codecs": "codecs",
@@ -82,9 +101,18 @@ def merge_core(registry: dict[str, dict[str, object]]) -> None:
         registry[point][name] = schema
 
 
+def stamp_stages(registry: dict[str, dict[str, object]]) -> None:
+    for stage, names in CODEC_STAGES.items():
+        for name in names:
+            schema = registry["codecs"].get(name)
+            assert isinstance(schema, dict), f"no schema for staged codec {name}"
+            schema["pipelineStage"] = stage
+
+
 def main() -> None:
     registry = fetch_vendored()
     merge_core(registry)
+    stamp_stages(registry)
     out = {
         "source": {
             "repository": "zarr-developers/zarr-extensions",

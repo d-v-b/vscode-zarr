@@ -21,7 +21,7 @@
     "extra": 1
   },
   "fill_value": 0,
-  "codecs": ["bytes", "gzip"],
+  "codecs": ["bytes", {"name": "transpose", "configuration": {"order": [0,1,2]}}],
   "dimension_names": [
     "y",
     null,
