@@ -12,27 +12,16 @@ jobs:
     permissions:
       # For attaching the .vsix to a GitHub release.
       contents: write
-    defaults:
-      run:
-        working-directory: vscode-zarr
     env:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: vscode-zarr
-      - uses: actions/checkout@v4
-        with:
-          repository: d-v-b/zarr-metadata-ts
-          path: zarr-metadata-ts
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Build the zarr-metadata library
-        working-directory: zarr-metadata-ts
-        run: npm ci && npm run build
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run typecheck
       - run: npm run build
       - run: npx --yes @vscode/vsce package --no-dependencies

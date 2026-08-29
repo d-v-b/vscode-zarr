@@ -29,8 +29,3 @@ convention, odd minor versions.
    token, add it as the `OVSX_PAT` repository secret.
 3. Without the secrets, the corresponding publish steps are skipped —
    tagging still produces a GitHub release with an installable `.vsix`.
-
-The `zarr-metadata` dependency resolves from a sibling checkout of
-`d-v-b/zarr-metadata-ts` (the workflows reproduce that layout);
-once the library is published to npm, switch the dependency to a semver
-range and simplify both workflows.

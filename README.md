@@ -35,16 +35,15 @@ Every diagnostic is placed on the exact offending value (source: `zarr`).
 ## Development
 
 The extension depends on the TypeScript
-[`zarr-metadata`](https://github.com/d-v-b/zarr-metadata-ts) library,
-resolved from a sibling checkout (`file:../zarr-metadata-ts`) until it is
-published to npm.
+[`zarr-metadata`](https://github.com/d-v-b/zarr-metadata-ts) library
+(from npm).
 
 Development verbs live in the [justfile](justfile) (needs
 [`just`](https://github.com/casey/just), plus `uv` for the schemas
 recipe); `just` with no arguments lists them:
 
 ```bash
-just install       # npm install (links the sibling zarr-metadata checkout)
+just install       # npm install
 just build         # esbuild → dist/extension.js
 just typecheck
 just check         # everything CI runs

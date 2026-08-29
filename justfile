@@ -1,17 +1,12 @@
 # Development verbs for the Zarr Metadata VS Code extension. Recipes run
 # with this directory as the working directory regardless of where `just`
 # is invoked.
-#
-# The extension depends on the zarr-metadata library from a sibling
-# checkout (file:../zarr-metadata-ts) until it is published to npm; run
-# `just build` there first after changing library code — the dependency
-# resolves against its dist/.
 
 # List available recipes
 default:
     @just --list
 
-# Install dependencies (also links the sibling zarr-metadata checkout)
+# Install dependencies
 install:
     npm install
 
