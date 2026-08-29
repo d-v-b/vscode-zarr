@@ -34,3 +34,11 @@ The `zarr-metadata` dependency resolves from a sibling checkout of
 `zarr-developers/zarr-metadata-ts` (the workflows reproduce that layout);
 once the library is published to npm, switch the dependency to a semver
 range and simplify both workflows.
+
+## While the repos are private
+
+The workflows check out `zarr-developers/zarr-metadata-ts`, which the
+default workflow token cannot read while that repo is private. Either
+make the repos public, or add a `CROSS_REPO_TOKEN` repository secret
+here: a fine-grained PAT with read-only Contents access to
+`zarr-developers/zarr-metadata-ts`.

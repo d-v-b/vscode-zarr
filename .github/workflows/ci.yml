@@ -23,6 +23,12 @@ jobs:
         with:
           repository: zarr-developers/zarr-metadata-ts
           path: zarr-metadata-ts
+          # The default GITHUB_TOKEN cannot read OTHER private repos; while
+          # zarr-metadata-ts is private, this needs the CROSS_REPO_TOKEN
+          # secret (a fine-grained PAT with read access to that repo).
+          # Once the repos are public (or the library is on npm), the
+          # fallback default token suffices / the checkout goes away.
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
