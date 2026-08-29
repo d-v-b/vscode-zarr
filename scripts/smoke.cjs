@@ -47,9 +47,13 @@ Module._cache["vscode"] = { exports: vscode, loaded: true };
 
 const ext = require(path.join(__dirname, "..", "dist", "extension.js"));
 
-/** Run one example fixture through the pipeline; return its diagnostics + lines. */
+/**
+ * Run one test fixture through the pipeline; return its diagnostics + lines.
+ * Fixtures live in scripts/fixtures/, NOT example/ — the example documents
+ * are a playground the user is free to edit in the dev host.
+ */
 function run(fixture) {
-  const file = path.join(__dirname, "..", "example", fixture, "zarr.json");
+  const file = path.join(__dirname, "fixtures", `${fixture}.zarr.json`);
   const text = readFileSync(file, "utf-8");
   const lines = text.split("\n");
   const offsets = [0];
@@ -106,9 +110,14 @@ function run(fixture) {
   expect((m) => m.includes("<= 9") || m.includes("<= 22"), "nested gzip level (through sharding)");
   expect((m) => m.includes('"start", "end"'), "sharding index_location enum");
   expect((m) => m.includes('"/", "."'), "chunk_key_encoding separator enum");
-  if (diagnostics.length !== 6) {
+  expect((m) => m.includes('did you mean "bytes"'), "near-miss codec name suggestion");
+  const suggestion = diagnostics.find((d) => d.message.includes("did you mean"));
+  if (suggestion.severity !== 1) {
+    throw new Error("bad_codecs: the did-you-mean suggestion must be a warning, not an error");
+  }
+  if (diagnostics.length !== 7) {
     console.error(messages);
-    throw new Error(`bad_codecs: expected exactly 6 diagnostics, got ${diagnostics.length}`);
+    throw new Error(`bad_codecs: expected exactly 7 diagnostics, got ${diagnostics.length}`);
   }
 }
 

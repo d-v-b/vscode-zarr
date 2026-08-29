@@ -30,7 +30,9 @@ Validation, hover documentation, and completions for
   against the [zarr-extensions](https://github.com/zarr-developers/zarr-extensions)
   registry's schemas (vendored at a pinned commit, plus core-spec schemas
   the registry does not carry), including codec pipelines nested inside
-  `sharding_indexed`. Unknown extension names are left alone — the name
+  `sharding_indexed`. Unknown extension names within edit distance of a
+  registered one get a "did you mean" warning; names far from everything
+  registered are respected as intentionally novel — the extension name
   space is open.
 
 Every diagnostic comes from the same engine, covers the offending

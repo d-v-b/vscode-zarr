@@ -23,6 +23,16 @@ import registry from "../schemas/extension-registry.json";
 
 type Point = "codecs" | "data_type" | "chunk_grid" | "chunk_key_encoding";
 
+/** A registry issue; `suggestion` marks heuristic did-you-mean warnings. */
+export type RegistryIssue = PathedIssue & { readonly suggestion?: boolean };
+
+const POINT_NOUNS: Record<Point, string> = {
+  codecs: "codec",
+  data_type: "data type",
+  chunk_grid: "chunk grid",
+  chunk_key_encoding: "chunk key encoding",
+};
+
 interface RegistrySchema {
   properties?: { configuration?: object };
   required?: string[];
@@ -57,6 +67,49 @@ function configRequiredFor(point: Point, name: string): boolean {
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function levenshtein(a: string, b: string): number {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const previous = new Array<number>(cols);
+  const current = new Array<number>(cols);
+  for (let j = 0; j < cols; j++) previous[j] = j;
+  for (let i = 1; i < rows; i++) {
+    current[0] = i;
+    for (let j = 1; j < cols; j++) {
+      const substitution = (previous[j - 1] as number) + (a[i - 1] === b[j - 1] ? 0 : 1);
+      current[j] = Math.min((previous[j] as number) + 1, (current[j - 1] as number) + 1, substitution);
+    }
+    for (let j = 0; j < cols; j++) previous[j] = current[j] as number;
+  }
+  return previous[cols - 1] as number;
+}
+
+/**
+ * The registered names an unknown `name` was probably a typo of: within
+ * edit distance 1, or 2 when either side is longer than four characters
+ * (so the truncation typo "byt" still reaches "bytes"), compared
+ * case-insensitively. Names far from everything registered are respected
+ * as intentionally novel — the extension name space is open.
+ */
+function nearMisses(point: Point, name: string): string[] {
+  const known = Object.keys(registry[point]);
+  let best = Number.POSITIVE_INFINITY;
+  let matches: string[] = [];
+  for (const candidate of known) {
+    const budget = Math.max(name.length, candidate.length) > 4 ? 2 : 1;
+    if (Math.abs(candidate.length - name.length) > budget) continue;
+    const distance = levenshtein(name.toLowerCase(), candidate.toLowerCase());
+    if (distance > budget) continue;
+    if (distance < best) {
+      best = distance;
+      matches = [candidate];
+    } else if (distance === best) {
+      matches.push(candidate);
+    }
+  }
+  return matches;
 }
 
 /** Map one Ajv error to our issue vocabulary, path-relative to the configuration. */
@@ -95,19 +148,36 @@ function validateField(
   point: Point,
   field: unknown,
   path: ReadonlyArray<string | number>,
-): PathedIssue[] {
+): RegistryIssue[] {
   let name: string;
+  let namePath: ReadonlyArray<string | number>;
   let configuration: unknown;
   if (typeof field === "string") {
     name = field;
+    namePath = path;
     configuration = undefined;
   } else if (isPlainObject(field) && typeof field["name"] === "string") {
     name = field["name"];
+    namePath = [...path, "name"];
     configuration = field["configuration"];
   } else {
     return []; // structurally invalid; the structural layer already reported it
   }
-  const issues: PathedIssue[] = [];
+  const issues: RegistryIssue[] = [];
+  if (!(name in registry[point])) {
+    const suggestions = nearMisses(point, name);
+    if (suggestions.length > 0) {
+      issues.push({
+        path: namePath,
+        message: `unknown ${POINT_NOUNS[point]} ${JSON.stringify(name)} — did you mean ${suggestions
+          .map((s) => JSON.stringify(s))
+          .join(" or ")}?`,
+        kind: "invalid_value",
+        suggestion: true,
+      });
+    }
+    return issues; // nothing further to validate against
+  }
   if (configuration === undefined) {
     if (configRequiredFor(point, name)) {
       issues.push({
@@ -141,9 +211,9 @@ function validateField(
  * as pathed issues ready for the shared diagnostics pipeline. Documents
  * that are not v3 arrays yield nothing.
  */
-export function validateExtensionConfigurations(value: unknown): PathedIssue[] {
+export function validateExtensionConfigurations(value: unknown): RegistryIssue[] {
   if (!isPlainObject(value) || value["node_type"] !== "array") return [];
-  const issues: PathedIssue[] = [];
+  const issues: RegistryIssue[] = [];
   for (const point of ["data_type", "chunk_grid", "chunk_key_encoding"] as const) {
     if (point in value) issues.push(...validateField(point, value[point], [point]));
   }

@@ -147,9 +147,20 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     // vendored zarr-extensions + core-spec schemas, through the same
     // pipeline so every diagnostic keeps one voice.
     items.push(
-      ...validateExtensionConfigurations(value).map((issue) =>
-        toDiagnostic(document, root, issue, basename),
-      ),
+      ...validateExtensionConfigurations(value).map((issue) => {
+        const diagnostic = toDiagnostic(document, root, issue, basename);
+        if (issue.suggestion) {
+          // A near-miss of a registered name is probably a typo, but the
+          // extension name space is open — warn, don't condemn, and link
+          // the registry (the fix path if the name is genuinely new).
+          diagnostic.severity = vscode.DiagnosticSeverity.Warning;
+          diagnostic.code = {
+            value: "unknown_name",
+            target: vscode.Uri.parse("https://github.com/zarr-developers/zarr-extensions"),
+          };
+        }
+        return diagnostic;
+      }),
     );
     // Structurally valid, but most readers will refuse it: per the v3 spec
     // an unrecognized extension field must carry "must_understand": false
