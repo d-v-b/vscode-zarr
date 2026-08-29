@@ -18,8 +18,13 @@ build:
 typecheck:
     npm run typecheck
 
+# Activation smoke test: load the built bundle with a stubbed vscode
+# module and run the example fixture through the diagnostics pipeline
+smoke: build
+    node scripts/smoke.cjs
+
 # Run everything CI runs for this package
-check: typecheck build
+check: typecheck smoke
 
 # Build a .vsix for manual installation or Marketplace upload
 package: build

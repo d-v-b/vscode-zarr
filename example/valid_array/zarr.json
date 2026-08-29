@@ -12,5 +12,5 @@
   ],
   "dimension_names": ["y", "x"],
   "attributes": { "units": "meters" },
-  "foo": False
+  "foo": false
 }

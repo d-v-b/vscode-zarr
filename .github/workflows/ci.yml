@@ -17,5 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - name: Activation smoke test against the built bundle
+        run: node scripts/smoke.cjs
       - name: Package a .vsix (dry run of the release artifact)
         run: npx --yes @vscode/vsce package --no-dependencies

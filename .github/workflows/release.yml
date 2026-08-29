@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - run: node scripts/smoke.cjs
       - run: npx --yes @vscode/vsce package --no-dependencies
       - name: Publish to the VS Code Marketplace
         if: env.VSCE_PAT != ''
