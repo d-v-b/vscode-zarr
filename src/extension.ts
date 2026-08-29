@@ -1,13 +1,14 @@
 /**
  * Zarr Metadata extension: structural diagnostics for Zarr metadata files.
  *
- * The declarative layer (contributes.jsonValidation in package.json) already
- * gives schema-based validation, hover docs, and completions through VS
- * Code's built-in JSON language service. This module adds the checks JSON
- * Schema cannot express — cross-field rules like "one dimension_names entry
- * per dimension of shape" — by running the zarr-metadata validators (a port
- * of the Python reference implementation) and mapping each loc-addressed
- * problem to a precise text range.
+ * This module is the ONLY source of validation diagnostics: it runs the
+ * zarr-metadata validators (a port of the Python reference implementation)
+ * and maps each pathed issue to a precise text range, so every problem has
+ * one voice, one range convention, and a spec-linked code. The schemas the
+ * extension contributes (contributes.jsonValidation) are deliberately
+ * docs-only — stripped of assertion keywords at generation time — and exist
+ * purely to power completions and hover documentation through VS Code's
+ * built-in JSON language service.
  */
 import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";

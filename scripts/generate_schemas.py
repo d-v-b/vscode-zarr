@@ -1,10 +1,15 @@
-"""Generate the extension's JSON Schemas from the Python zarr-metadata package.
+"""Generate the extension's docs-only JSON Schemas from the Python zarr-metadata package.
 
 The Python package's `_pydantic_schema` module defines schema-input TypedDicts
-whose whole purpose is producing accurate JSON Schemas (closed envelopes,
-non-negative dimensions, non-empty codec pipelines). This script emits one
-schema per metadata file kind into schemas/, adding
-titles and per-field descriptions that power VS Code hover tooltips.
+whose whole purpose is producing accurate JSON Schemas. This script emits one
+schema per metadata file kind into schemas/, adding titles and per-field
+descriptions — and then STRIPS every assertion keyword, because the schemas
+exist only to power completions and hover documentation. Validation is the
+diagnostics layer's job (src/extension.ts + the zarr-metadata validators),
+which checks a strict superset of what these schemas could assert; leaving
+assertions in would double-report every problem from a second source with
+coarser ranges and different wording (`const`/`enum` become `examples` so
+value completions survive).
 
 Usage (mirrors the zarr-metadata-ts repo's check_conformance.py):
 
@@ -138,10 +143,54 @@ def attach_docs(schema: dict[str, Any]) -> dict[str, Any]:
     return schema
 
 
+# JSON Schema keywords that ASSERT (produce validation errors). Everything
+# else — properties, items, descriptions, refs, examples, defaultSnippets —
+# only informs navigation, completion, and hover.
+ASSERTION_KEYWORDS = frozenset({
+    "required",
+    "type",
+    "minItems",
+    "maxItems",
+    "minimum",
+    "maximum",
+    "exclusiveMinimum",
+    "exclusiveMaximum",
+    "minLength",
+    "maxLength",
+    "minProperties",
+    "maxProperties",
+    "pattern",
+    "multipleOf",
+    "uniqueItems",
+    "not",
+})
+
+
+def deassert(node: Any) -> Any:
+    """Recursively strip assertion keywords; fold const/enum into examples."""
+    if isinstance(node, list):
+        return [deassert(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    out: dict[str, Any] = {}
+    for key, value in node.items():
+        if key in ASSERTION_KEYWORDS:
+            continue
+        if key == "additionalProperties" and value is False:
+            continue
+        if key in ("const", "enum"):
+            examples = [value] if key == "const" else list(value)
+            merged = out.get("examples", [])
+            out["examples"] = merged + [ex for ex in examples if ex not in merged]
+            continue
+        out[key] = deassert(value)
+    return out
+
+
 def build(adapter_type: Any, title: str, description: str) -> dict[str, Any]:
     # attach_docs matches on pydantic's own class-name titles, so it runs
     # before the friendly title/description override them.
-    schema = attach_docs(TypeAdapter(adapter_type).json_schema())
+    schema = deassert(attach_docs(TypeAdapter(adapter_type).json_schema()))
     rest = {k: v for k, v in schema.items() if k not in ("title", "description")}
     return {"title": title, "description": description, **rest}
 
@@ -169,7 +218,6 @@ def main() -> None:
             "description": (
                 f"Arbitrary user attributes for the sibling v2 array or group. See {SPEC_V2}"
             ),
-            "type": "object",
         },
         "zarr2-consolidated.schema.json": build(
             ps.ZarrV2ConsolidatedMetadataJSON,

@@ -9,13 +9,14 @@ Validation, hover documentation, and completions for
   **`.zattrs`** (Zarr v2), and **`.zmetadata`** (v2 consolidated) are
   recognized automatically — the dotfiles are associated with JSON so they
   get syntax highlighting and formatting.
-- **Schema validation** via VS Code's built-in JSON language service:
-  required keys, literal values, enum members, and per-field hover
-  documentation with links to the Zarr specs. Schemas are generated from the
-  Python [`zarr-metadata`](https://pypi.org/project/zarr-metadata/)
-  package's types.
-- **Structural diagnostics** beyond what JSON Schema can express, from a
-  TypeScript port of the `zarr-metadata` validators:
+- **Completions and hover documentation** via VS Code's built-in JSON
+  language service, driven by docs-only schemas generated from the Python
+  [`zarr-metadata`](https://pypi.org/project/zarr-metadata/) package's
+  types (assertion keywords are stripped at generation time, so the schema
+  layer never produces diagnostics of its own).
+- **One uniform source of diagnostics** — a TypeScript port of the
+  `zarr-metadata` validators covering everything the spec requires,
+  including what JSON Schema could never express:
   - one `dimension_names` entry per dimension of `shape`
   - `chunks` and `shape` dimensionality agreement (v2)
   - non-empty codec pipelines, `must_understand` rules at each extension
@@ -25,7 +26,8 @@ Validation, hover documentation, and completions for
     `"must_understand": false` — the spec obligates readers to refuse
     nodes carrying such fields
 
-Every diagnostic is placed on the exact offending value (source: `zarr`).
+Every diagnostic comes from the same engine, covers the offending
+property, and carries a code linking to the relevant spec section.
 
 ## Notes
 
