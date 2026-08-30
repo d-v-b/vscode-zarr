@@ -228,13 +228,15 @@ function actionsFor(document, diagnostic) {
   delete settings["zarr.extensionSchemas"];
   const before = run("extensions_opt_in").diagnostics;
   const pointers = before.filter((d) => d.message.includes('setting: "zarr.extensionSchemas"'));
-  if (before.length !== 2 || pointers.length !== 2 || !before.every((d) => d.severity === 1)) {
+  if (before.length !== 3 || pointers.length !== 3 || !before.every((d) => d.severity === 1)) {
     console.error(before.map((d) => `${d.severity}: ${d.message}`));
-    throw new Error("extensions_opt_in: expected exactly two setting-pointer warnings by default");
+    throw new Error("extensions_opt_in: expected exactly three setting-pointer warnings by default");
   }
   // Opted in: int2 and packbits are recognized and valid.
   settings["zarr.extensionSchemas"] = "zarr-extensions";
   const after = run("extensions_opt_in").diagnostics;
+  // int2 + packbits + a $ref'd rectilinear configuration: recognized,
+  // compiled (the $defs-carrying path), and valid.
   if (after.length !== 0) {
     console.error(after.map((d) => d.message));
     throw new Error("extensions_opt_in: expected no diagnostics once zarr-extensions is enabled");

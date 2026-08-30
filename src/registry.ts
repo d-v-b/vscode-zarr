@@ -57,6 +57,7 @@ interface RegistrySchema {
   documentation?: string;
   pipelineStage?: PipelineStage;
   source?: "core-spec" | "zarr-extensions";
+  $defs?: Record<string, object>;
 }
 
 function rawEntry(point: Point, name: string): RegistrySchema | undefined {
@@ -90,16 +91,28 @@ const NESTED_PIPELINES: ReadonlyMap<string, ReadonlyArray<string>> = new Map([
 
 // strict:false — registry schemas may carry unknown annotations (e.g. the
 // nonstandard "range" in zarr-extensions' transpose schema).
-const ajv = new Ajv2020({ strict: false, allErrors: true });
+const ajv = new Ajv2020({ strict: false, allErrors: true, logger: false });
 const compiled = new Map<string, ValidateFunction>();
 
 function configValidatorFor(point: Point, name: string): ValidateFunction | undefined {
   const key = `${point}/${name}`;
   const cached = compiled.get(key);
   if (cached !== undefined) return cached;
-  const configSchema = rawEntry(point, name)?.properties?.configuration;
+  const entry = rawEntry(point, name);
+  const configSchema = entry?.properties?.configuration;
   if (configSchema === undefined) return undefined;
-  const validator = ajv.compile(configSchema);
+  // The configuration subtree may $ref into the whole schema's $defs (e.g.
+  // rectilinear's); carry them along so the subtree compiles standalone.
+  const standalone =
+    entry?.$defs === undefined ? configSchema : { $defs: entry.$defs, ...configSchema };
+  let validator: ValidateFunction;
+  try {
+    validator = ajv.compile(standalone);
+  } catch {
+    // An uncompilable registry schema must never take down the diagnostics
+    // pass; that extension's configuration simply goes unvalidated.
+    return undefined;
+  }
   compiled.set(key, validator);
   return validator;
 }
@@ -302,6 +315,48 @@ function prefix(head: ReadonlyArray<string | number>, issues: PathedIssue[]): Pa
   return issues.map((issue) => ({ ...issue, path: [...head, ...issue.path] }));
 }
 
+/**
+ * Condense Ajv's error list: drop anyOf/oneOf summaries when their branch
+ * errors are present, merge multiple type expectations at one location into
+ * "expected X or Y", and dedupe — one mistake, one diagnostic.
+ */
+function condense(errors: ErrorObject[]): PathedIssue[] {
+  const byLocation = new Map<string, ErrorObject[]>();
+  for (const error of errors) {
+    const group = byLocation.get(error.instancePath) ?? [];
+    group.push(error);
+    byLocation.set(error.instancePath, group);
+  }
+  const issues: PathedIssue[] = [];
+  for (const group of byLocation.values()) {
+    const branches = group.filter((e) => e.keyword !== "anyOf" && e.keyword !== "oneOf");
+    const chosen = branches.length > 0 ? branches : group;
+    const typeErrors = chosen.filter((e) => e.keyword === "type");
+    if (typeErrors.length > 0) {
+      const types = [
+        ...new Set(
+          typeErrors.flatMap((e) => {
+            const type = (e.params as { type: string | string[] }).type;
+            return Array.isArray(type) ? type : [type];
+          }),
+        ),
+      ];
+      const first = toIssue(typeErrors[0] as ErrorObject);
+      issues.push({ ...first, message: `expected ${types.join(" or ")}` });
+    }
+    for (const error of chosen.filter((e) => e.keyword !== "type")) {
+      issues.push(toIssue(error));
+    }
+  }
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = JSON.stringify([issue.path, issue.message]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** Validate one metadata field's configuration; recurse into nested pipelines. */
 function validateField(
   point: Point,
@@ -377,7 +432,7 @@ function validateField(
   if (validator !== undefined && !validator(configuration)) {
     const documentation = entry.documentation;
     issues.push(
-      ...prefix([...path, "configuration"], (validator.errors ?? []).map(toIssue)).map(
+      ...prefix([...path, "configuration"], condense(validator.errors ?? [])).map(
         (issue): RegistryIssue => ({ ...issue, documentation }),
       ),
     );
