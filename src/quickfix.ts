@@ -11,7 +11,7 @@
  * it needs no side-channel state and survives VS Code cloning diagnostic
  * objects between publish and code-action time.
  */
-import { applyEdits, modify, parseTree, findNodeAtLocation } from "jsonc-parser";
+import { applyEdits, findNodeAtOffset, getNodePath, modify, parseTree } from "jsonc-parser";
 import * as vscode from "vscode";
 
 function codeValue(diagnostic: vscode.Diagnostic): string | undefined {
@@ -61,18 +61,19 @@ function waiverAction(
   document: vscode.TextDocument,
   diagnostic: vscode.Diagnostic,
 ): vscode.CodeAction[] {
-  // The diagnostic range covers the field's key token.
-  let key: string;
-  try {
-    key = JSON.parse(document.getText(diagnostic.range)) as string;
-  } catch {
-    return [];
-  }
+  // The diagnostic range covers the field's key token; resolve the actual
+  // node there so the fix lands at the right depth (the field may live
+  // inside a consolidated metadata entry, not at the document's top level).
   const text = document.getText();
+  const root = parseTree(text);
+  if (root === undefined) return [];
+  const keyNode = findNodeAtOffset(root, document.offsetAt(diagnostic.range.start));
+  if (keyNode?.type !== "string" || keyNode.parent?.type !== "property") return [];
+  const key = keyNode.value as string;
+  const valueNode = keyNode.parent.children?.[1];
   // Only an object value can carry the waiver member.
-  const valueNode = parseTree(text) && findNodeAtLocation(parseTree(text)!, [key]);
   if (valueNode?.type !== "object") return [];
-  const edits = modify(text, [key, "must_understand"], false, {
+  const edits = modify(text, [...getNodePath(valueNode), "must_understand"], false, {
     formattingOptions: { insertSpaces: true, tabSize: 2 },
   });
   if (edits.length === 0) return [];

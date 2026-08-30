@@ -72,15 +72,16 @@ const ext = require(path.join(__dirname, "..", "dist", "extension.js"));
  * Fixtures live in scripts/fixtures/, NOT example/ — the example documents
  * are a playground the user is free to edit in the dev host.
  */
-function run(fixture) {
-  const file = path.join(__dirname, "fixtures", `${fixture}.zarr.json`);
+function run(fixture, docName = "zarr.json") {
+  const suffix = docName === ".zmetadata" ? "zmetadata.json" : "zarr.json";
+  const file = path.join(__dirname, "fixtures", `${fixture}.${suffix}`);
   const text = readFileSync(file, "utf-8");
   const lines = text.split("\n");
   const offsets = [0];
   for (const line of lines) offsets.push(offsets[offsets.length - 1] + line.length + 1);
-  const uri = `file:///example/${fixture}/zarr.json`;
+  const uri = `file:///example/${fixture}/${docName}`;
   const document = {
-    uri: { path: `/example/${fixture}/zarr.json`, toString: () => uri },
+    uri: { path: `/example/${fixture}/${docName}`, toString: () => uri },
     languageId: "json",
     getText: (range) =>
       range === undefined
@@ -261,6 +262,49 @@ function actionsFor(document, diagnostic) {
     throw new Error("bad_rectilinear: semantic diagnostics did not match expectations");
   }
   delete settings["zarr.extensionSchemas"];
+}
+
+// --- bad_consolidated: every v3 layer descends into consolidated entries --
+{
+  const { diagnostics, document, text } = run("bad_consolidated");
+  const errors = diagnostics.filter((d) => d.severity === 0).map((d) => d.message).sort();
+  const warnings = diagnostics.filter((d) => d.severity === 1);
+  const expectedErrors = [
+    'expected an integer in [-2147483648, 2147483647] for data type "int32"',
+    "must be <= 9",
+  ];
+  if (JSON.stringify(errors) !== JSON.stringify(expectedErrors) || warnings.length !== 1) {
+    console.error(diagnostics.map((d) => `${d.severity}: ${d.message}`));
+    throw new Error("bad_consolidated: expected semantic + registry errors and one warning inside the entry");
+  }
+  // The waiver quick fix must land inside the consolidated entry, not at
+  // the document's top level.
+  const actions = actionsFor(document, warnings[0]);
+  if (actions.length !== 1) throw new Error("bad_consolidated: expected one waiver action");
+  const repaired = JSON.parse(applyEdit(document, text, actions[0].edit));
+  const entry = repaired.consolidated_metadata.metadata["deep/array"];
+  if (entry.custom_thing.must_understand !== false) {
+    throw new Error("bad_consolidated: waiver was not inserted inside the entry");
+  }
+}
+
+// --- bad_zmetadata: .zmetadata entries validated as documents -------------
+{
+  const { diagnostics } = run("bad_zmetadata", ".zmetadata");
+  const got = diagnostics.map((d) => d.message).sort();
+  const expected = [
+    "missing required key: dtype",
+    "unexpected document member (on disk, attributes live in the sibling .zattrs file)",
+  ];
+  // plus the .zattrs entry type error
+  if (
+    diagnostics.length !== 3 ||
+    !expected.every((m) => got.includes(m)) ||
+    !got.some((m) => m.includes("expected a mapping"))
+  ) {
+    console.error(got);
+    throw new Error("bad_zmetadata: entry-document diagnostics did not match expectations");
+  }
 }
 
 // --- quick fixes ----------------------------------------------------------

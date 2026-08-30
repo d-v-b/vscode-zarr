@@ -21,7 +21,8 @@ import {
   flattenTree,
   mustUnderstandExtensionFieldsV3,
   validateArrayMetadataV2,
-  validateArraySemanticsV3,
+  validateConsolidatedDocumentsV2,
+  validateSemanticsV3,
   validateConsolidatedMetadataV2,
   validateGroupMetadataV2,
   validateMetadataV3,
@@ -49,6 +50,35 @@ const SPEC_URLS: ReadonlyMap<string, string> = new Map([
   [".zattrs", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
   [".zmetadata", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
 ]);
+
+const MAX_CONSOLIDATED_DEPTH = 64;
+
+/**
+ * Visit a v3 document and every inline consolidated entry beneath it (each
+ * entry is a complete array or group document; nested groups may carry
+ * consolidated metadata of their own).
+ */
+function walkV3Nodes(
+  value: unknown,
+  path: (string | number)[],
+  depth: number,
+  visit: (node: unknown, nodePath: (string | number)[]) => void,
+): void {
+  visit(value, path);
+  if (depth >= MAX_CONSOLIDATED_DEPTH) return;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return;
+  const doc = value as Record<string, unknown>;
+  if (doc["node_type"] !== "group") return;
+  const consolidated = doc["consolidated_metadata"];
+  if (typeof consolidated !== "object" || consolidated === null || Array.isArray(consolidated)) {
+    return;
+  }
+  const entries = (consolidated as Record<string, unknown>)["metadata"];
+  if (typeof entries !== "object" || entries === null || Array.isArray(entries)) return;
+  for (const [key, entry] of Object.entries(entries)) {
+    walkV3Nodes(entry, [...path, "consolidated_metadata", "metadata", key], depth + 1, visit);
+  }
+}
 
 function registryOptions(): RegistryOptions {
   const value = vscode.workspace
@@ -152,67 +182,75 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     toDiagnostic(document, root, issue, basename),
   );
   if (basename === "zarr.json") {
-    // Semantic layer (from the zarr-metadata library): cross-field rules
-    // over the well-known core extension points — chunk grid arity,
-    // transpose permutations, sharding divisibility, fill_value vs data
-    // type.
+    // Semantic layer (from the zarr-metadata library): cross-field rules,
+    // descending into inline consolidated entries.
     items.push(
-      ...flattenTree(validateArraySemanticsV3(value)).map((issue) =>
+      ...flattenTree(validateSemanticsV3(value)).map((issue) =>
         toDiagnostic(document, root, issue, basename),
       ),
     );
-    // Registry layer: recognized extension-point configurations (codecs,
-    // chunk grid, chunk key encoding, data type) validated against the
-    // vendored zarr-extensions + core-spec schemas, through the same
-    // pipeline so every diagnostic keeps one voice.
+    // Registry and must_understand layers run per node — the document
+    // itself and every consolidated entry beneath it.
+    const options = registryOptions();
+    walkV3Nodes(value, [], 0, (node, nodePath) => {
+      items.push(
+        ...validateExtensionConfigurations(node, options).map((issue) => {
+          const prefixed = { ...issue, path: [...nodePath, ...issue.path] };
+          const diagnostic = toDiagnostic(document, root, prefixed, basename);
+          if (issue.documentation !== undefined) {
+            // Registry issues link to the extension's own documentation (its
+            // zarr-specs page or zarr-extensions directory), not the generic
+            // core spec.
+            diagnostic.code = {
+              value: issue.kind,
+              target: vscode.Uri.parse(issue.documentation),
+            };
+          }
+          if (issue.suggestion) {
+            // A near-miss of a registered name is probably a typo, but the
+            // extension name space is open — warn, don't condemn, and link
+            // the registry (the fix path if the name is genuinely new).
+            diagnostic.severity = vscode.DiagnosticSeverity.Warning;
+            diagnostic.code = {
+              value: "unknown_name",
+              target: vscode.Uri.parse("https://github.com/zarr-developers/zarr-extensions"),
+            };
+          }
+          return diagnostic;
+        }),
+      );
+      // Structurally valid, but most readers will refuse it: per the v3 spec
+      // an unrecognized extension field must carry "must_understand": false
+      // to be ignorable, so obligated extras get a warning on the key.
+      for (const key of mustUnderstandExtensionFieldsV3(node)) {
+        const valueNode = findNodeAtLocation(root, [...nodePath, key]);
+        const keyNode = valueNode?.parent?.children?.[0] ?? valueNode;
+        if (keyNode === undefined) continue;
+        const range = new vscode.Range(
+          document.positionAt(keyNode.offset),
+          document.positionAt(keyNode.offset + keyNode.length),
+        );
+        // Kept to one clause so it reads as a sibling of other hover entries;
+        // the linked code carries the spec rationale (readers that do not
+        // recognize an unwaived extension field must refuse the node).
+        const diagnostic = new vscode.Diagnostic(
+          range,
+          'unrecognized extension field without a "must_understand": false waiver',
+          vscode.DiagnosticSeverity.Warning,
+        );
+        diagnostic.source = "zarr";
+        diagnostic.code = codeFor("must_understand", basename);
+        items.push(diagnostic);
+      }
+    });
+  } else if (basename === ".zmetadata") {
+    // Entry-level interpretation of the consolidated map: .zarray/.zgroup
+    // entries as on-disk documents, .zattrs entries as JSON objects.
     items.push(
-      ...validateExtensionConfigurations(value, registryOptions()).map((issue) => {
-        const diagnostic = toDiagnostic(document, root, issue, basename);
-        if (issue.documentation !== undefined) {
-          // Registry issues link to the extension's own documentation (its
-          // zarr-specs page or zarr-extensions directory), not the generic
-          // core spec.
-          diagnostic.code = {
-            value: issue.kind,
-            target: vscode.Uri.parse(issue.documentation),
-          };
-        }
-        if (issue.suggestion) {
-          // A near-miss of a registered name is probably a typo, but the
-          // extension name space is open — warn, don't condemn, and link
-          // the registry (the fix path if the name is genuinely new).
-          diagnostic.severity = vscode.DiagnosticSeverity.Warning;
-          diagnostic.code = {
-            value: "unknown_name",
-            target: vscode.Uri.parse("https://github.com/zarr-developers/zarr-extensions"),
-          };
-        }
-        return diagnostic;
-      }),
+      ...flattenTree(validateConsolidatedDocumentsV2(value)).map((issue) =>
+        toDiagnostic(document, root, issue, basename),
+      ),
     );
-    // Structurally valid, but most readers will refuse it: per the v3 spec
-    // an unrecognized extension field must carry "must_understand": false
-    // to be ignorable, so obligated extras get a warning on the key.
-    for (const key of mustUnderstandExtensionFieldsV3(value)) {
-      const valueNode = findNodeAtLocation(root, [key]);
-      const keyNode = valueNode?.parent?.children?.[0] ?? valueNode;
-      if (keyNode === undefined) continue;
-      const range = new vscode.Range(
-        document.positionAt(keyNode.offset),
-        document.positionAt(keyNode.offset + keyNode.length),
-      );
-      // Kept to one clause so it reads as a sibling of other hover entries;
-      // the linked code carries the spec rationale (readers that do not
-      // recognize an unwaived extension field must refuse the node).
-      const diagnostic = new vscode.Diagnostic(
-        range,
-        'unrecognized extension field without a "must_understand": false waiver',
-        vscode.DiagnosticSeverity.Warning,
-      );
-      diagnostic.source = "zarr";
-      diagnostic.code = codeFor("must_understand", basename);
-      items.push(diagnostic);
-    }
   }
   diagnostics.set(document.uri, items);
 }

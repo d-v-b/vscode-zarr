@@ -1,0 +1,22 @@
+{
+  "zarr_format": 3,
+  "node_type": "group",
+  "consolidated_metadata": {
+    "kind": "inline",
+    "must_understand": false,
+    "metadata": {
+      "deep/array": {
+        "zarr_format": 3,
+        "node_type": "array",
+        "shape": [10],
+        "data_type": "int32",
+        "chunk_grid": { "name": "regular", "configuration": { "chunk_shape": [5] } },
+        "chunk_key_encoding": "default",
+        "fill_value": "NaN",
+        "codecs": ["bytes", { "name": "gzip", "configuration": { "level": 42 } }],
+        "custom_thing": { "note": "no waiver" }
+      },
+      "sub": { "zarr_format": 3, "node_type": "group" }
+    }
+  }
+}
