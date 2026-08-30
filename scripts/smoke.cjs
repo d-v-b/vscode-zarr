@@ -209,8 +209,11 @@ function actionsFor(document, diagnostic) {
 {
   const { diagnostics } = run("bad_semantics");
   const messages = diagnostics.map((d) => d.message).sort();
+  // The invalid transpose makes the chunk's true shape unknowable, so the
+  // sharding divisibility claim downstream of it is (rightly) suppressed —
+  // dimensional context threads through the pipeline as of zarr-metadata
+  // 0.4.1 (mirroring zarr-python#303).
   const expected = [
-    'expected [4,4] to evenly divide the outer chunk shape [5,12]',
     'expected a permutation of the integers 0..1',
     'expected an integer in [-2147483648, 2147483647] for data type "int32"',
   ];
