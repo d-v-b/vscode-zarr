@@ -16,7 +16,7 @@ import { findNodeAtLocation, parseTree, type Node } from "jsonc-parser";
 import * as vscode from "vscode";
 
 import { ZarrQuickFixProvider } from "./quickfix.js";
-import { validateExtensionConfigurations } from "./registry.js";
+import { validateExtensionConfigurations, type RegistryOptions } from "./registry.js";
 import {
   flattenTree,
   mustUnderstandExtensionFieldsV3,
@@ -49,6 +49,13 @@ const SPEC_URLS: ReadonlyMap<string, string> = new Map([
   [".zattrs", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
   [".zmetadata", "https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html"],
 ]);
+
+function registryOptions(): RegistryOptions {
+  const value = vscode.workspace
+    .getConfiguration("zarr")
+    .get<string>("extensionSchemas", "core-spec");
+  return { zarrExtensions: value === "zarr-extensions" };
+}
 
 function codeFor(kind: string, basename: string): vscode.Diagnostic["code"] {
   const url = SPEC_URLS.get(basename);
@@ -159,7 +166,7 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     // vendored zarr-extensions + core-spec schemas, through the same
     // pipeline so every diagnostic keeps one voice.
     items.push(
-      ...validateExtensionConfigurations(value).map((issue) => {
+      ...validateExtensionConfigurations(value, registryOptions()).map((issue) => {
         const diagnostic = toDiagnostic(document, root, issue, basename);
         if (issue.documentation !== undefined) {
           // Registry issues link to the extension's own documentation (its
@@ -237,6 +244,12 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration("zarr")) return;
+      for (const document of vscode.workspace.textDocuments) {
+        refresh(document, diagnostics);
+      }
+    }),
     vscode.workspace.onDidOpenTextDocument((document) => refresh(document, diagnostics)),
     vscode.workspace.onDidChangeTextDocument((event) => scheduleRefresh(event.document)),
     vscode.workspace.onDidCloseTextDocument((document) => {

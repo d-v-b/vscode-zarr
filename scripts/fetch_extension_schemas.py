@@ -54,6 +54,27 @@ CODEC_STAGES = {
     "bytes_to_bytes": ["blosc", "gzip", "zstd", "crc32c"],
 }
 
+# Names defined by the CORE v3 spec (zarr-specs), regardless of where their
+# schema happens to be maintained — several core codecs' schemas are
+# vendored from zarr-extensions. Everything else is source "zarr-extensions"
+# and only recognized when the user opts in via the zarr.extensionSchemas
+# setting. Core data types are enumerated in schemas/extensions-core; the
+# r<N> raw-bits pattern is recognized in code.
+CORE_SPEC_NAMES = {
+    "codecs": {"bytes", "transpose", "zstd", "blosc", "gzip", "crc32c", "sharding_indexed"},
+    "chunk_grid": {"regular"},
+    "chunk_key_encoding": {"default", "v2"},
+}
+
+# zarr-specs pages for core codecs whose schemas are vendored from
+# zarr-extensions (their documentation link should be the spec, not the
+# registry directory).
+CORE_SPEC_DOCS = {
+    ("codecs", "bytes"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/bytes/index.html",
+    ("codecs", "transpose"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/transpose/index.html",
+    ("codecs", "zstd"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/zstd/index.html",
+}
+
 # zarr-extensions directory -> the metadata extension point it configures.
 POINTS = {
     "codecs": "codecs",
@@ -78,11 +99,14 @@ def fetch_vendored() -> dict[str, dict[str, object]]:
         extracted = archive.extractfile(member)
         assert extracted is not None, member.name
         schema = json.loads(extracted.read())
-        schema["documentation"] = (
-            "https://github.com/zarr-developers/zarr-extensions/tree/main/"
-            f"{parts[1]}/{parts[2]}"
+        point, name = POINTS[parts[1]], parts[2]
+        core = name in CORE_SPEC_NAMES.get(point, set())
+        schema["source"] = "core-spec" if core else "zarr-extensions"
+        schema["documentation"] = CORE_SPEC_DOCS.get(
+            (point, name),
+            f"https://github.com/zarr-developers/zarr-extensions/tree/main/{parts[1]}/{name}",
         )
-        registry[POINTS[parts[1]]][parts[2]] = schema
+        registry[point][name] = schema
     return registry
 
 
@@ -95,6 +119,7 @@ def merge_core(registry: dict[str, dict[str, object]]) -> None:
             f"{point}/{name} is now in zarr-extensions; drop the core copy"
         )
         schema = json.loads(path.read_text())
+        schema["source"] = "core-spec"
         # Core schemas carry their zarr-specs page as the description.
         if isinstance(schema.get("description"), str) and schema["description"].startswith("http"):
             schema["documentation"] = schema["description"]

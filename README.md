@@ -27,13 +27,19 @@ Validation, hover documentation, and completions for
     nodes carrying such fields
 - **Extension-point configuration validation**: recognized codec, chunk
   grid, chunk key encoding, and data type configurations are validated
-  against the [zarr-extensions](https://github.com/zarr-developers/zarr-extensions)
-  registry's schemas (vendored at a pinned commit, plus core-spec schemas
-  the registry does not carry), including codec pipelines nested inside
+  against schemas, including codec pipelines nested inside
   `sharding_indexed`. Unknown extension names within edit distance of a
   registered one get a "did you mean" warning; names far from everything
   registered are respected as intentionally novel — the extension name
   space is open.
+- **The recognized-name set is a setting** (`zarr.extensionSchemas`):
+  by default only the Zarr v3 core specification's extension points are
+  recognized; opting in to `"zarr-extensions"` additionally recognizes
+  everything in the
+  [zarr-extensions](https://github.com/zarr-developers/zarr-extensions)
+  registry (vendored at a pinned commit). A name defined in a disabled
+  registry gets a warning pointing at the setting instead of a spurious
+  did-you-mean.
 
 Every diagnostic comes from the same engine, covers the offending
 property, and carries a code linking to the relevant spec section. Quick

@@ -22,6 +22,7 @@ class Diagnostic {
   constructor(range, message, severity) { this.range = range; this.message = message; this.severity = severity; }
 }
 const captured = new Map();
+const settings = {}; // mutable stub for workspace configuration
 let quickFixProvider;
 class WorkspaceEdit {
   constructor() { this.edits = []; }
@@ -45,6 +46,10 @@ const vscode = {
     onDidOpenTextDocument: () => ({ dispose() {} }),
     onDidChangeTextDocument: () => ({ dispose() {} }),
     onDidCloseTextDocument: () => ({ dispose() {} }),
+    onDidChangeConfiguration: () => ({ dispose() {} }),
+    getConfiguration: (section) => ({
+      get: (key, fallback) => settings[`${section}.${key}`] ?? fallback,
+    }),
     textDocuments: [],
   },
   Position, Range, Diagnostic, WorkspaceEdit, CodeAction,
@@ -213,6 +218,28 @@ function actionsFor(document, diagnostic) {
     console.error(messages);
     throw new Error("bad_semantics: semantic diagnostics did not match expectations");
   }
+}
+
+// --- extensions_opt_in: the zarr.extensionSchemas setting -----------------
+{
+  // Default (core-spec only): registry-known-but-disabled names warn and
+  // point at the setting; nothing else fires (no configuration validation,
+  // no pipeline checks over unknown stages).
+  delete settings["zarr.extensionSchemas"];
+  const before = run("extensions_opt_in").diagnostics;
+  const pointers = before.filter((d) => d.message.includes('setting: "zarr.extensionSchemas"'));
+  if (before.length !== 2 || pointers.length !== 2 || !before.every((d) => d.severity === 1)) {
+    console.error(before.map((d) => `${d.severity}: ${d.message}`));
+    throw new Error("extensions_opt_in: expected exactly two setting-pointer warnings by default");
+  }
+  // Opted in: int2 and packbits are recognized and valid.
+  settings["zarr.extensionSchemas"] = "zarr-extensions";
+  const after = run("extensions_opt_in").diagnostics;
+  if (after.length !== 0) {
+    console.error(after.map((d) => d.message));
+    throw new Error("extensions_opt_in: expected no diagnostics once zarr-extensions is enabled");
+  }
+  delete settings["zarr.extensionSchemas"];
 }
 
 // --- quick fixes ----------------------------------------------------------

@@ -30,6 +30,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/bitround",
       "pipelineStage": "array_to_array"
     },
@@ -100,6 +101,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html",
       "pipelineStage": "bytes_to_bytes"
     },
@@ -137,7 +139,8 @@
           "const": "bytes"
         }
       ],
-      "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/bytes",
+      "source": "core-spec",
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/bytes/index.html",
       "pipelineStage": "array_to_bytes"
     },
     "cast_value": {
@@ -205,6 +208,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/cast_value",
       "pipelineStage": "array_to_array"
     },
@@ -226,6 +230,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/crc32c/index.html",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/crc32c/index.html",
       "pipelineStage": "bytes_to_bytes"
     },
@@ -263,6 +268,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/gzip/index.html",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/gzip/index.html",
       "pipelineStage": "bytes_to_bytes"
     },
@@ -346,6 +352,7 @@
           ]
         }
       },
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/n5_default",
       "pipelineStage": "array_to_bytes"
     },
@@ -397,6 +404,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/packbits",
       "pipelineStage": "array_to_bytes"
     },
@@ -440,6 +448,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/reshape",
       "pipelineStage": "array_to_array"
     },
@@ -463,6 +472,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/scale_offset",
       "pipelineStage": "array_to_array"
     },
@@ -531,6 +541,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/sharding-indexed/index.html",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/sharding-indexed/index.html",
       "pipelineStage": "array_to_bytes"
     },
@@ -567,7 +578,8 @@
         "name",
         "configuration"
       ],
-      "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/transpose",
+      "source": "core-spec",
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/transpose/index.html",
       "pipelineStage": "array_to_array"
     },
     "vlen-bytes": {
@@ -593,6 +605,7 @@
           "const": "vlen-bytes"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/vlen-bytes",
       "pipelineStage": "array_to_bytes"
     },
@@ -619,6 +632,7 @@
           "const": "vlen-utf8"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/vlen-utf8",
       "pipelineStage": "array_to_bytes"
     },
@@ -735,6 +749,7 @@
           "additionalProperties": false
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/zfp",
       "pipelineStage": "array_to_bytes"
     },
@@ -771,7 +786,8 @@
         "configuration"
       ],
       "additionalProperties": false,
-      "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/zstd",
+      "source": "core-spec",
+      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/zstd/index.html",
       "pipelineStage": "bytes_to_bytes"
     }
   },
@@ -799,6 +815,7 @@
           "const": "bfloat16"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/bfloat16"
     },
     "bool": {
@@ -815,6 +832,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "bytes": {
@@ -840,6 +858,7 @@
           "const": "bytes"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/bytes"
     },
     "complex128": {
@@ -856,6 +875,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "complex64": {
@@ -872,6 +892,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "complex_bfloat16": {
@@ -897,6 +918,7 @@
           "const": "complex_bfloat16"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_bfloat16"
     },
     "complex_float16": {
@@ -922,6 +944,7 @@
           "const": "complex_float16"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float16"
     },
     "complex_float32": {
@@ -947,6 +970,7 @@
           "const": "complex_float32"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float32"
     },
     "complex_float4_e2m1fn": {
@@ -972,6 +996,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float4_e2m1fn"
     },
     "complex_float64": {
@@ -997,6 +1022,7 @@
           "const": "complex_float64"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float64"
     },
     "complex_float6_e2m3fn": {
@@ -1022,6 +1048,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float6_e2m3fn"
     },
     "complex_float6_e3m2fn": {
@@ -1047,6 +1074,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float6_e3m2fn"
     },
     "complex_float8_e3m4": {
@@ -1072,6 +1100,7 @@
           "const": "float8_e3m4"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e3m4"
     },
     "complex_float8_e4m3": {
@@ -1097,6 +1126,7 @@
           "const": "float8_e4m3"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e4m3"
     },
     "complex_float8_e4m3b11fnuz": {
@@ -1122,6 +1152,7 @@
           "const": "float8_e4m3b11fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e4m3b11fnuz"
     },
     "complex_float8_e4m3fnuz": {
@@ -1147,6 +1178,7 @@
           "const": "float8_e4m3fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e4m3fnuz"
     },
     "complex_float8_e5m2": {
@@ -1172,6 +1204,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e5m2"
     },
     "complex_float8_e5m2fnuz": {
@@ -1197,6 +1230,7 @@
           "const": "float8_e5m2fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e5m2fnuz"
     },
     "complex_float8_e8m0fnu": {
@@ -1222,6 +1256,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/complex_float8_e8m0fnu"
     },
     "fixed_length_utf32": {
@@ -1251,6 +1286,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/fixed_length_utf32"
     },
     "float16": {
@@ -1267,6 +1303,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "float32": {
@@ -1283,6 +1320,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "float4_e2m1fn": {
@@ -1308,6 +1346,7 @@
           "const": "float4_e2m1fn"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float4_e2m1fn"
     },
     "float64": {
@@ -1324,6 +1363,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "float6_e2m3fn": {
@@ -1349,6 +1389,7 @@
           "const": "float6_e2m3fn"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float6_e2m3fn"
     },
     "float6_e3m2fn": {
@@ -1374,6 +1415,7 @@
           "const": "float6_e3m2fn"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float6_e3m2fn"
     },
     "float8_e3m4": {
@@ -1399,6 +1441,7 @@
           "const": "float8_e3m4"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e3m4"
     },
     "float8_e4m3": {
@@ -1424,6 +1467,7 @@
           "const": "float8_e4m3"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e4m3"
     },
     "float8_e4m3b11fnuz": {
@@ -1449,6 +1493,7 @@
           "const": "float8_e4m3b11fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e4m3b11fnuz"
     },
     "float8_e4m3fnuz": {
@@ -1474,6 +1519,7 @@
           "const": "float8_e4m3fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e4m3fnuz"
     },
     "float8_e5m2": {
@@ -1499,6 +1545,7 @@
           "const": "float8_e5m2"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e5m2"
     },
     "float8_e5m2fnuz": {
@@ -1524,6 +1571,7 @@
           "const": "float8_e5m2fnuz"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e5m2fnuz"
     },
     "float8_e8m0fnu": {
@@ -1549,6 +1597,7 @@
           "const": "float8_e8m0fnu"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float8_e8m0fnu"
     },
     "int16": {
@@ -1565,6 +1614,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "int2": {
@@ -1590,6 +1640,7 @@
           "const": "int2"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/int2"
     },
     "int32": {
@@ -1606,6 +1657,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "int4": {
@@ -1631,6 +1683,7 @@
           "const": "int4"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/int4"
     },
     "int64": {
@@ -1647,6 +1700,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "int8": {
@@ -1663,6 +1717,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "numpy.datetime64": {
@@ -1714,6 +1769,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/numpy.datetime64"
     },
     "numpy.timedelta64": {
@@ -1765,6 +1821,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/numpy.timedelta64"
     },
     "string": {
@@ -1790,6 +1847,7 @@
           "const": "string"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/string"
     },
     "struct": {
@@ -1862,6 +1920,7 @@
         "configuration"
       ],
       "additionalProperties": false,
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/struct"
     },
     "uint16": {
@@ -1878,6 +1937,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "uint2": {
@@ -1903,6 +1963,7 @@
           "const": "uint2"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/uint2"
     },
     "uint32": {
@@ -1919,6 +1980,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "uint4": {
@@ -1944,6 +2006,7 @@
           "const": "uint4"
         }
       ],
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/uint4"
     },
     "uint64": {
@@ -1960,6 +2023,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     },
     "uint8": {
@@ -1976,6 +2040,7 @@
         "name"
       ],
       "additionalProperties": false,
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html"
     }
   },
@@ -2063,6 +2128,7 @@
           "const": "rectilinear"
         }
       },
+      "source": "zarr-extensions",
       "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/chunk-grids/rectilinear"
     },
     "regular": {
@@ -2104,6 +2170,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#regular-grids",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#regular-grids"
     }
   },
@@ -2140,6 +2207,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding"
     },
     "v2": {
@@ -2174,6 +2242,7 @@
       ],
       "additionalProperties": false,
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding",
+      "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#chunk-key-encoding"
     }
   }

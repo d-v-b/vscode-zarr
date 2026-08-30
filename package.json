@@ -53,6 +53,24 @@
         ".zattrs": "json",
         ".zmetadata": "json"
       }
+    },
+    "configuration": {
+      "title": "Zarr Metadata",
+      "properties": {
+        "zarr.extensionSchemas": {
+          "type": "string",
+          "enum": [
+            "core-spec",
+            "zarr-extensions"
+          ],
+          "enumDescriptions": [
+            "Recognize only the extension points defined by the Zarr v3 core specification (codecs, chunk grids, chunk key encodings, data types).",
+            "Additionally recognize everything registered in the zarr-developers/zarr-extensions registry (vendored at a pinned commit)."
+          ],
+          "default": "core-spec",
+          "description": "Which extension schema registry the diagnostics recognize. Names outside the enabled registry are treated as intentionally novel (no configuration validation, no did-you-mean suggestions); names defined in a disabled registry get a warning pointing at this setting."
+        }
+      }
     }
   },
   "scripts": {

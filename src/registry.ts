@@ -30,6 +30,12 @@ export type RegistryIssue = PathedIssue & {
   readonly documentation?: string;
 };
 
+/** Which schema sources the registry layer recognizes. */
+export interface RegistryOptions {
+  /** Recognize the zarr-extensions registry's entries (default: core spec only). */
+  readonly zarrExtensions?: boolean;
+}
+
 const POINT_NOUNS: Record<Point, string> = {
   codecs: "codec",
   data_type: "data type",
@@ -50,6 +56,19 @@ interface RegistrySchema {
   required?: string[];
   documentation?: string;
   pipelineStage?: PipelineStage;
+  source?: "core-spec" | "zarr-extensions";
+}
+
+function rawEntry(point: Point, name: string): RegistrySchema | undefined {
+  return (registry[point] as Record<string, RegistrySchema | undefined>)[name];
+}
+
+/** The registry entry for `name`, honoring which sources are enabled. */
+function entryFor(point: Point, name: string, options: RegistryOptions): RegistrySchema | undefined {
+  const schema = rawEntry(point, name);
+  if (schema === undefined) return undefined;
+  if (schema.source === "zarr-extensions" && options.zarrExtensions !== true) return undefined;
+  return schema;
 }
 
 interface ConfigSchema {
@@ -78,25 +97,15 @@ function configValidatorFor(point: Point, name: string): ValidateFunction | unde
   const key = `${point}/${name}`;
   const cached = compiled.get(key);
   if (cached !== undefined) return cached;
-  const schema = (registry[point] as Record<string, RegistrySchema | undefined>)[name];
-  const configSchema = schema?.properties?.configuration;
+  const configSchema = rawEntry(point, name)?.properties?.configuration;
   if (configSchema === undefined) return undefined;
   const validator = ajv.compile(configSchema);
   compiled.set(key, validator);
   return validator;
 }
 
-function configRequiredFor(point: Point, name: string): boolean {
-  const schema = (registry[point] as Record<string, RegistrySchema | undefined>)[name];
-  return schema?.required?.includes("configuration") ?? false;
-}
-
-function documentationFor(point: Point, name: string): string | undefined {
-  return (registry[point] as Record<string, RegistrySchema | undefined>)[name]?.documentation;
-}
-
-function stageFor(name: string): PipelineStage | undefined {
-  return (registry.codecs as Record<string, RegistrySchema | undefined>)[name]?.pipelineStage;
+function stageFor(name: string, options: RegistryOptions): PipelineStage | undefined {
+  return entryFor("codecs", name, options)?.pipelineStage;
 }
 
 function codecName(field: unknown): string | undefined {
@@ -115,11 +124,12 @@ function codecName(field: unknown): string | undefined {
 function validatePipeline(
   pipeline: unknown[],
   path: ReadonlyArray<string | number>,
+  options: RegistryOptions,
 ): RegistryIssue[] {
   if (pipeline.length === 0) return []; // the structural layer already reports empty codecs
   const stages: (PipelineStage | undefined)[] = pipeline.map((field) => {
     const name = codecName(field);
-    return name === undefined ? undefined : stageFor(name);
+    return name === undefined ? undefined : stageFor(name, options);
   });
   if (stages.some((stage) => stage === undefined)) return [];
   const issues: RegistryIssue[] = [];
@@ -208,8 +218,7 @@ function sampleFor(schema: ConfigSchema | undefined): unknown {
 
 /** A rendered example configuration for the extension, when one can be built. */
 function exampleFor(point: Point, name: string): string | undefined {
-  const schema = (registry[point] as Record<string, RegistrySchema | undefined>)[name];
-  const sample = sampleFor(schema?.properties?.configuration);
+  const sample = sampleFor(rawEntry(point, name)?.properties?.configuration);
   return sample === UNDERIVABLE ? undefined : JSON.stringify(sample);
 }
 
@@ -241,8 +250,10 @@ function levenshtein(a: string, b: string): number {
  * case-insensitively. Names far from everything registered are respected
  * as intentionally novel — the extension name space is open.
  */
-function nearMisses(point: Point, name: string): string[] {
-  const known = Object.keys(registry[point]);
+function nearMisses(point: Point, name: string, options: RegistryOptions): string[] {
+  const known = Object.keys(registry[point]).filter(
+    (candidate) => entryFor(point, candidate, options) !== undefined,
+  );
   let best = Number.POSITIVE_INFINITY;
   let matches: string[] = [];
   for (const candidate of known) {
@@ -296,6 +307,7 @@ function validateField(
   point: Point,
   field: unknown,
   path: ReadonlyArray<string | number>,
+  options: RegistryOptions,
 ): RegistryIssue[] {
   let name: string;
   let namePath: ReadonlyArray<string | number>;
@@ -312,11 +324,25 @@ function validateField(
     return []; // structurally invalid; the structural layer already reported it
   }
   const issues: RegistryIssue[] = [];
-  if (!(name in registry[point])) {
+  const entry = entryFor(point, name, options);
+  if (entry === undefined) {
     // The core spec's raw-bits data types are a pattern (r8, r16, ...), not
     // enumerable registry entries — recognized, nothing to validate.
     if (point === "data_type" && /^r[1-9][0-9]*$/.test(name)) return issues;
-    const suggestions = nearMisses(point, name);
+    if (rawEntry(point, name) !== undefined) {
+      // Known to the zarr-extensions registry, which is not enabled: say
+      // exactly that instead of a bogus did-you-mean against core names.
+      issues.push({
+        path: namePath,
+        message:
+          `${JSON.stringify(name)} is defined in the zarr-extensions registry, ` +
+          'which is not enabled (setting: "zarr.extensionSchemas")',
+        kind: "invalid_value",
+        suggestion: true,
+      });
+      return issues;
+    }
+    const suggestions = nearMisses(point, name, options);
     if (suggestions.length > 0) {
       issues.push({
         path: namePath,
@@ -330,7 +356,7 @@ function validateField(
     return issues; // nothing further to validate against
   }
   if (configuration === undefined) {
-    if (configRequiredFor(point, name)) {
+    if (entry.required?.includes("configuration") ?? false) {
       // Anchored on the field itself (which exists) rather than the absent
       // configuration key, so the message stays specific instead of being
       // rewritten by the range-fallback machinery.
@@ -341,7 +367,7 @@ function validateField(
           `${JSON.stringify(name)} requires a configuration` +
           (example === undefined ? "" : `, e.g. "configuration": ${example}`),
         kind: "missing_key",
-        documentation: documentationFor(point, name),
+        documentation: entry.documentation,
       });
     }
     return issues;
@@ -349,7 +375,7 @@ function validateField(
   if (!isPlainObject(configuration)) return issues; // structural layer's problem
   const validator = configValidatorFor(point, name);
   if (validator !== undefined && !validator(configuration)) {
-    const documentation = documentationFor(point, name);
+    const documentation = entry.documentation;
     issues.push(
       ...prefix([...path, "configuration"], (validator.errors ?? []).map(toIssue)).map(
         (issue): RegistryIssue => ({ ...issue, documentation }),
@@ -361,10 +387,12 @@ function validateField(
     for (const key of nested) {
       const pipeline = configuration[key];
       if (!Array.isArray(pipeline)) continue;
-      pipeline.forEach((entry, index) => {
-        issues.push(...validateField("codecs", entry, [...path, "configuration", key, index]));
+      pipeline.forEach((item, index) => {
+        issues.push(
+          ...validateField("codecs", item, [...path, "configuration", key, index], options),
+        );
       });
-      issues.push(...validatePipeline(pipeline, [...path, "configuration", key]));
+      issues.push(...validatePipeline(pipeline, [...path, "configuration", key], options));
     }
   }
   return issues;
@@ -375,18 +403,21 @@ function validateField(
  * as pathed issues ready for the shared diagnostics pipeline. Documents
  * that are not v3 arrays yield nothing.
  */
-export function validateExtensionConfigurations(value: unknown): RegistryIssue[] {
+export function validateExtensionConfigurations(
+  value: unknown,
+  options: RegistryOptions = {},
+): RegistryIssue[] {
   if (!isPlainObject(value) || value["node_type"] !== "array") return [];
   const issues: RegistryIssue[] = [];
   for (const point of ["data_type", "chunk_grid", "chunk_key_encoding"] as const) {
-    if (point in value) issues.push(...validateField(point, value[point], [point]));
+    if (point in value) issues.push(...validateField(point, value[point], [point], options));
   }
   const codecs = value["codecs"];
   if (Array.isArray(codecs)) {
     codecs.forEach((entry, index) => {
-      issues.push(...validateField("codecs", entry, ["codecs", index]));
+      issues.push(...validateField("codecs", entry, ["codecs", index], options));
     });
-    issues.push(...validatePipeline(codecs, ["codecs"]));
+    issues.push(...validatePipeline(codecs, ["codecs"], options));
   }
   return issues;
 }
