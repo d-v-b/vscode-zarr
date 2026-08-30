@@ -244,6 +244,22 @@ function actionsFor(document, diagnostic) {
   delete settings["zarr.extensionSchemas"];
 }
 
+// --- bad_rectilinear: rectilinear grid semantics (library 0.4.0) ----------
+{
+  settings["zarr.extensionSchemas"] = "zarr-extensions";
+  const { diagnostics } = run("bad_rectilinear");
+  const messages = diagnostics.map((d) => d.message).sort();
+  const expected = [
+    "expected [2,6] to evenly divide every chunk size of the grid (dimension 0 has chunk size 3)",
+    "expected chunk sizes summing to 11 along dimension 1, got 12",
+  ];
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
+    console.error(messages);
+    throw new Error("bad_rectilinear: semantic diagnostics did not match expectations");
+  }
+  delete settings["zarr.extensionSchemas"];
+}
+
 // --- quick fixes ----------------------------------------------------------
 {
   // "Change to \"bytes\"" on the did-you-mean warning repairs the name.
