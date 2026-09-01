@@ -10,12 +10,16 @@ default:
 install:
     npm install
 
+# Fetch dependencies when node_modules is missing (fresh clone / new machine)
+_deps:
+    @[ -d node_modules ] || npm install
+
 # Bundle the extension to dist/extension.js
-build:
+build: _deps
     npm run build
 
 # Type-check the extension sources
-typecheck:
+typecheck: _deps
     npm run typecheck
 
 # Activation smoke test: load the built bundle with a stubbed vscode
