@@ -10,9 +10,12 @@ default:
 install:
     npm install
 
-# Fetch dependencies when node_modules is missing (fresh clone / new machine)
+# Fetch dependencies when node_modules is missing (fresh clone / new
+# machine). npm ci installs exactly the committed lockfile from a clean
+# slate; a PARTIALLY extracted node_modules still needs a manual
+# `rm -rf node_modules && npm ci`.
 _deps:
-    @[ -d node_modules ] || npm install
+    @[ -d node_modules ] || npm ci
 
 # Bundle the extension to dist/extension.js
 build: _deps
