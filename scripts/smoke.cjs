@@ -307,6 +307,21 @@ function actionsFor(document, diagnostic) {
   }
 }
 
+// --- bad_grid: configless grid caught once, not once per layer ------------
+{
+  // The semantic layer (0.6.0) and the registry schema both flag a
+  // configless regular grid; the dedupe must collapse them to ONE
+  // diagnostic, with the semantic layer's message winning by push order.
+  const { diagnostics } = run("bad_grid");
+  if (
+    diagnostics.length !== 1 ||
+    diagnostics[0].message !== '"regular" requires a configuration with "chunk_shape"'
+  ) {
+    console.error(diagnostics.map((d) => `${d.severity}: ${d.message}`));
+    throw new Error("bad_grid: expected exactly one deduplicated requires-configuration diagnostic");
+  }
+}
+
 // --- quick fixes ----------------------------------------------------------
 {
   // "Change to \"bytes\"" on the did-you-mean warning repairs the name.

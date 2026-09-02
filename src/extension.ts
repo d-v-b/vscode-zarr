@@ -252,7 +252,28 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
       ),
     );
   }
-  diagnostics.set(document.uri, items);
+  // Layers can legitimately reach the same verdict (the semantic layer and
+  // the registry schemas both know "regular" needs a configuration); one
+  // mistake gets one diagnostic, semantic-first by push order.
+  const seen = new Set<string>();
+  const deduped = items.filter((diagnostic) => {
+    const code =
+      typeof diagnostic.code === "object" && diagnostic.code !== null
+        ? String(diagnostic.code.value)
+        : String(diagnostic.code);
+    const key = [
+      diagnostic.range.start.line,
+      diagnostic.range.start.character,
+      diagnostic.range.end.line,
+      diagnostic.range.end.character,
+      diagnostic.severity,
+      code,
+    ].join("|");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  diagnostics.set(document.uri, deduped);
 }
 
 export function activate(context: vscode.ExtensionContext): void {
