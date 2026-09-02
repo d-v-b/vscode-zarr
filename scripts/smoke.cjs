@@ -313,12 +313,14 @@ function actionsFor(document, diagnostic) {
   // configless regular grid; the dedupe must collapse them to ONE
   // diagnostic, with the semantic layer's message winning by push order.
   const { diagnostics } = run("bad_grid");
-  if (
-    diagnostics.length !== 1 ||
-    diagnostics[0].message !== '"regular" requires a configuration with "chunk_shape"'
-  ) {
+  const messages = diagnostics.map((d) => d.message).sort();
+  const expected = [
+    '"regular" requires a configuration with "chunk_shape"',
+    '"transpose" requires a configuration with "order"',
+  ];
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
     console.error(diagnostics.map((d) => `${d.severity}: ${d.message}`));
-    throw new Error("bad_grid: expected exactly one deduplicated requires-configuration diagnostic");
+    throw new Error("bad_grid: expected exactly the two deduplicated requires-configuration diagnostics");
   }
 }
 
