@@ -11,7 +11,7 @@ assertions in would double-report every problem from a second source with
 coarser ranges and different wording (`const`/`enum` become `examples` so
 value completions survive).
 
-Usage (mirrors the zarr-metadata-ts repo's check_conformance.py):
+Usage (mirrors the zarr-metadata.js repo's check_conformance.py):
 
     uv run --with 'pydantic>=2.13' --with /path/to/zarr-python/packages/zarr-metadata \
         python scripts/generate_schemas.py

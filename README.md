@@ -58,7 +58,7 @@ extension names, and "mark as ignorable" to insert the
 ## Development
 
 The extension depends on the TypeScript
-[`zarr-metadata`](https://github.com/d-v-b/zarr-metadata-ts) library
+[`zarr-metadata`](https://github.com/d-v-b/zarr-metadata.js) library
 (from npm).
 
 Development verbs live in the [justfile](justfile) (needs
