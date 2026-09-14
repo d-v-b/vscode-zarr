@@ -20,24 +20,37 @@ import { validateExtensionConfigurations, type RegistryOptions } from "./registr
 import {
   flattenTree,
   mustUnderstandExtensionFieldsV3,
-  validateArrayMetadataV2,
   validateConsolidatedDocumentsV2,
   validateSemanticsV3,
   validateConsolidatedMetadataV2,
-  validateGroupMetadataV2,
   validateMetadataV3,
-  type ErrorTree,
   type PathedIssue,
 } from "zarr-metadata";
 
-type Validator = (value: unknown) => ErrorTree;
+type Validator = (value: unknown) => PathedIssue[];
+
+/**
+ * A v2 `.zarray`/`.zgroup`/`.zattrs` file validated as an on-disk document.
+ * The library's plain v2 validators tolerate a merged `attributes` member
+ * (parity with the Python model), but per the v2 spec attributes live only in
+ * the sibling `.zattrs` file, which must hold a JSON object. The
+ * consolidated-entry layer applies exactly that on-disk interpretation, so a
+ * file is validated as a lone entry of its kind.
+ */
+function onDiskV2(basename: ".zarray" | ".zgroup" | ".zattrs"): Validator {
+  return (value) =>
+    flattenTree(validateConsolidatedDocumentsV2({ metadata: { [basename]: value } })).map(
+      (issue) => ({ ...issue, path: issue.path.slice(2) }),
+    );
+}
 
 /** Which validator handles a metadata file, keyed by basename. */
 const VALIDATORS: ReadonlyMap<string, Validator> = new Map([
-  ["zarr.json", validateMetadataV3],
-  [".zarray", validateArrayMetadataV2],
-  [".zgroup", validateGroupMetadataV2],
-  [".zmetadata", validateConsolidatedMetadataV2],
+  ["zarr.json", (value: unknown) => flattenTree(validateMetadataV3(value))],
+  [".zarray", onDiskV2(".zarray")],
+  [".zgroup", onDiskV2(".zgroup")],
+  [".zattrs", onDiskV2(".zattrs")],
+  [".zmetadata", (value: unknown) => flattenTree(validateConsolidatedMetadataV2(value))],
 ]);
 
 const DEBOUNCE_MS = 300;
@@ -178,22 +191,26 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
     return;
   }
   const basename = document.uri.path.split("/").pop() ?? "";
-  const items = flattenTree(validator(value)).map((issue) =>
-    toDiagnostic(document, root, issue, basename),
-  );
+  // One array per validation layer, in precedence order.
+  const layers: vscode.Diagnostic[][] = [
+    validator(value).map((issue) => toDiagnostic(document, root, issue, basename)),
+  ];
   if (basename === "zarr.json") {
     // Semantic layer (from the zarr-metadata library): cross-field rules,
     // descending into inline consolidated entries.
-    items.push(
-      ...flattenTree(validateSemanticsV3(value)).map((issue) =>
+    layers.push(
+      flattenTree(validateSemanticsV3(value)).map((issue) =>
         toDiagnostic(document, root, issue, basename),
       ),
     );
     // Registry and must_understand layers run per node — the document
     // itself and every consolidated entry beneath it.
     const options = registryOptions();
+    const registry: vscode.Diagnostic[] = [];
+    const mustUnderstand: vscode.Diagnostic[] = [];
+    layers.push(registry, mustUnderstand);
     walkV3Nodes(value, [], 0, (node, nodePath) => {
-      items.push(
+      registry.push(
         ...validateExtensionConfigurations(node, options).map((issue) => {
           const prefixed = { ...issue, path: [...nodePath, ...issue.path] };
           const diagnostic = toDiagnostic(document, root, prefixed, basename);
@@ -240,28 +257,29 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
         );
         diagnostic.source = "zarr";
         diagnostic.code = codeFor("must_understand", basename);
-        items.push(diagnostic);
+        mustUnderstand.push(diagnostic);
       }
     });
   } else if (basename === ".zmetadata") {
     // Entry-level interpretation of the consolidated map: .zarray/.zgroup
     // entries as on-disk documents, .zattrs entries as JSON objects.
-    items.push(
-      ...flattenTree(validateConsolidatedDocumentsV2(value)).map((issue) =>
+    layers.push(
+      flattenTree(validateConsolidatedDocumentsV2(value)).map((issue) =>
         toDiagnostic(document, root, issue, basename),
       ),
     );
   }
   // Layers can legitimately reach the same verdict (the semantic layer and
   // the registry schemas both know "regular" needs a configuration); one
-  // mistake gets one diagnostic, semantic-first by push order.
-  const seen = new Set<string>();
-  const deduped = items.filter((diagnostic) => {
+  // mistake gets one diagnostic, earlier layer first. Only ACROSS layers:
+  // within a layer, same-range diagnostics are distinct problems (several
+  // missing keys all fall back to the root object's first line).
+  const keyOf = (diagnostic: vscode.Diagnostic): string => {
     const code =
       typeof diagnostic.code === "object" && diagnostic.code !== null
         ? String(diagnostic.code.value)
         : String(diagnostic.code);
-    const key = [
+    return [
       diagnostic.range.start.line,
       diagnostic.range.start.character,
       diagnostic.range.end.line,
@@ -269,10 +287,14 @@ function refresh(document: vscode.TextDocument, diagnostics: vscode.DiagnosticCo
       diagnostic.severity,
       code,
     ].join("|");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  };
+  const seen = new Set<string>();
+  const deduped: vscode.Diagnostic[] = [];
+  for (const layer of layers) {
+    const kept = layer.filter((diagnostic) => !seen.has(keyOf(diagnostic)));
+    for (const diagnostic of kept) seen.add(keyOf(diagnostic));
+    deduped.push(...kept);
+  }
   diagnostics.set(document.uri, deduped);
 }
 

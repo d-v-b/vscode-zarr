@@ -73,7 +73,7 @@ const ext = require(path.join(__dirname, "..", "dist", "extension.js"));
  * are a playground the user is free to edit in the dev host.
  */
 function run(fixture, docName = "zarr.json") {
-  const suffix = docName === ".zmetadata" ? "zmetadata.json" : "zarr.json";
+  const suffix = docName.startsWith(".") ? `${docName.slice(1)}.json` : docName;
   const file = path.join(__dirname, "fixtures", `${fixture}.${suffix}`);
   const text = readFileSync(file, "utf-8");
   const lines = text.split("\n");
@@ -304,6 +304,42 @@ function actionsFor(document, diagnostic) {
   ) {
     console.error(got);
     throw new Error("bad_zmetadata: entry-document diagnostics did not match expectations");
+  }
+}
+
+// --- bad_attributes: on-disk v2 documents reject a merged attributes key --
+for (const docName of [".zarray", ".zgroup"]) {
+  const { diagnostics, lines } = run("bad_attributes", docName);
+  const messages = diagnostics.map((d) => d.message);
+  const expected = ["unexpected document member (on disk, attributes live in the sibling .zattrs file)"];
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
+    console.error(messages);
+    throw new Error(`bad_attributes ${docName}: expected exactly the on-disk attributes error`);
+  }
+  if (!lines[diagnostics[0].range.start.line].includes('"attributes"')) {
+    throw new Error(`bad_attributes ${docName}: diagnostic not anchored on the attributes key`);
+  }
+}
+
+// --- bad_zattrs: .zattrs must hold a JSON object --------------------------
+{
+  const { diagnostics } = run("bad_zattrs", ".zattrs");
+  const messages = diagnostics.map((d) => d.message);
+  if (JSON.stringify(messages) !== JSON.stringify(["expected a mapping with string keys"])) {
+    console.error(messages);
+    throw new Error("bad_zattrs: expected exactly the not-a-mapping error");
+  }
+}
+
+// --- missing_keys: every missing key reported, though all share a range ---
+{
+  const { diagnostics } = run("missing_keys");
+  const messages = diagnostics.map((d) => d.message).sort();
+  const expected = ["chunk_grid", "chunk_key_encoding", "codecs", "data_type", "fill_value", "shape"]
+    .map((key) => `missing required key: ${key}`);
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
+    console.error(messages);
+    throw new Error("missing_keys: same-range diagnostics from one layer must not be deduped");
   }
 }
 

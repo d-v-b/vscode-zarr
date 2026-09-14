@@ -126,13 +126,6 @@
       ],
       "title": "Dimension Separator",
       "description": "The chunk-key separator: \".\" (default, flat keys like 0.0) or \"/\" (nested directories)."
-    },
-    "attributes": {
-      "additionalProperties": {
-        "$ref": "#/$defs/JSONValue"
-      },
-      "title": "Attributes",
-      "description": "User attributes. On disk these live in the sibling .zattrs file, NOT in .zarray; this key is tolerated here for merged representations."
     }
   }
 }

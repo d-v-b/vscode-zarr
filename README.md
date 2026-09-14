@@ -49,11 +49,14 @@ extension names, and "mark as ignorable" to insert the
 
 ## Notes
 
-- `.zarray`/`.zgroup` validation accepts a merged `attributes` key for
-  tooling interoperability; per the v2 spec, on-disk attributes belong in
-  the sibling `.zattrs` file.
-- Validation is structural, not domain-level: dtype strings and codec
-  configurations are checked for shape, not interpreted.
+- Per the v2 spec, attributes live only in the sibling `.zattrs` file: an
+  `attributes` key in a `.zarray` or `.zgroup` file (or in such an entry of
+  `.zmetadata`) is reported as an error.
+- Zarr v2 validation is structural: `dtype` strings, `fill_value`, and
+  `compressor`/`filters` configurations are checked for shape, not
+  interpreted. (Zarr v3 goes further, as described above: fill values are
+  checked against the data type, and recognized codec configurations
+  against their schemas.)
 
 ## Development
 

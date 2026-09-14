@@ -104,17 +104,9 @@ FIELD_DOCS: dict[str, dict[str, str]] = {
             'The chunk-key separator: "." (default, flat keys like 0.0) or "/" '
             "(nested directories)."
         ),
-        "attributes": (
-            "User attributes. On disk these live in the sibling .zattrs file, NOT in "
-            ".zarray; this key is tolerated here for merged representations."
-        ),
     },
     "ZarrV2GroupMetadataJSON": {
         "zarr_format": "The Zarr format version. Always the integer 2.",
-        "attributes": (
-            "User attributes. On disk these live in the sibling .zattrs file, NOT in "
-            ".zgroup; this key is tolerated here for merged representations."
-        ),
     },
     "ZarrV2ConsolidatedMetadataJSON": {
         "zarr_consolidated_format": "The consolidated-metadata format version. Always 1.",
@@ -187,10 +179,43 @@ def deassert(node: Any) -> Any:
     return out
 
 
-def build(adapter_type: Any, title: str, description: str) -> dict[str, Any]:
+def drop_attributes(schema: dict[str, Any]) -> dict[str, Any]:
+    """Remove the merged `attributes` member from an on-disk v2 document schema.
+
+    The Python TypedDicts model a merged representation, but per the v2 spec
+    a `.zarray`/`.zgroup` file never carries attributes (they live in the
+    sibling `.zattrs`), so completions must not offer the key. $defs left
+    unreferenced by the removal are pruned.
+    """
+    schema.get("properties", {}).pop("attributes", None)
+    defs = schema.get("$defs", {})
+    while True:
+        # A $def counts as referenced from the document body or another $def
+        # (a self-reference alone doesn't keep it alive).
+        texts = {name: json.dumps(d) for name, d in defs.items()}
+        texts[None] = json.dumps({k: v for k, v in schema.items() if k != "$defs"})
+        unused = [
+            name
+            for name in defs
+            if not any(f'"#/$defs/{name}"' in text for other, text in texts.items() if other != name)
+        ]
+        if not unused:
+            break
+        for name in unused:
+            del defs[name]
+    if "$defs" in schema and not defs:
+        del schema["$defs"]
+    return schema
+
+
+def build(
+    adapter_type: Any, title: str, description: str, *, on_disk_v2: bool = False
+) -> dict[str, Any]:
     # attach_docs matches on pydantic's own class-name titles, so it runs
     # before the friendly title/description override them.
     schema = deassert(attach_docs(TypeAdapter(adapter_type).json_schema()))
+    if on_disk_v2:
+        schema = drop_attributes(schema)
     rest = {k: v for k, v in schema.items() if k not in ("title", "description")}
     return {"title": title, "description": description, **rest}
 
@@ -207,11 +232,13 @@ def main() -> None:
             ps.ZarrV2ArrayMetadataJSON,
             "Zarr v2 array metadata (.zarray)",
             f"A Zarr v2 array metadata document. See {SPEC_V2}",
+            on_disk_v2=True,
         ),
         "zarr2-group.schema.json": build(
             ps.ZarrV2GroupMetadataJSON,
             "Zarr v2 group metadata (.zgroup)",
             f"A Zarr v2 group metadata document. See {SPEC_V2}",
+            on_disk_v2=True,
         ),
         "zarr2-attrs.schema.json": {
             "title": "Zarr v2 user attributes (.zattrs)",

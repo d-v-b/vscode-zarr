@@ -11,6 +11,5 @@
     { "name": "zstd", "configuration": { "level": 3, "checksum": false } }
   ],
   "dimension_names": ["y", "x"],
-  "attributes": { "units": "meters" },
-  "foo": false
+  "attributes": { "units": "meters" }
 }
