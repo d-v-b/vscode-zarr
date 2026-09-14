@@ -1,27 +1,6 @@
 {
   "title": "Zarr v2 group metadata (.zgroup)",
   "description": "A Zarr v2 group metadata document. See https://zarr-specs.readthedocs.io/en/latest/v2/v2.0.html",
-  "$defs": {
-    "JSONValue": {
-      "anyOf": [
-        {},
-        {},
-        {},
-        {},
-        {
-          "items": {
-            "$ref": "#/$defs/JSONValue"
-          }
-        },
-        {
-          "additionalProperties": {
-            "$ref": "#/$defs/JSONValue"
-          }
-        },
-        {}
-      ]
-    }
-  },
   "properties": {
     "zarr_format": {
       "examples": [
@@ -29,13 +8,6 @@
       ],
       "title": "Zarr Format",
       "description": "The Zarr format version. Always the integer 2."
-    },
-    "attributes": {
-      "additionalProperties": {
-        "$ref": "#/$defs/JSONValue"
-      },
-      "title": "Attributes",
-      "description": "User attributes. On disk these live in the sibling .zattrs file, NOT in .zgroup; this key is tolerated here for merged representations."
     }
   }
 }
