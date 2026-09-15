@@ -54,6 +54,11 @@ CODEC_STAGES = {
     "bytes_to_bytes": ["blosc", "gzip", "zstd", "crc32c"],
 }
 
+# Codecs whose encoded output is variable-sized. The sharding_indexed spec:
+# "Codecs that produce variable-sized encoded representation, such as
+# compression codecs, MUST NOT be used for index codecs."
+VARIABLE_SIZED_CODECS = ["blosc", "gzip", "zstd"]
+
 # Names defined by the CORE v3 spec (zarr-specs), regardless of where their
 # schema happens to be maintained — several core codecs' schemas are
 # vendored from zarr-extensions. Everything else is source "zarr-extensions"
@@ -61,7 +66,7 @@ CODEC_STAGES = {
 # setting. Core data types are enumerated in schemas/extensions-core; the
 # r<N> raw-bits pattern is recognized in code.
 CORE_SPEC_NAMES = {
-    "codecs": {"bytes", "transpose", "zstd", "blosc", "gzip", "crc32c", "sharding_indexed"},
+    "codecs": {"bytes", "transpose", "blosc", "gzip", "crc32c", "sharding_indexed"},
     "chunk_grid": {"regular"},
     "chunk_key_encoding": {"default", "v2"},
 }
@@ -72,7 +77,6 @@ CORE_SPEC_NAMES = {
 CORE_SPEC_DOCS = {
     ("codecs", "bytes"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/bytes/index.html",
     ("codecs", "transpose"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/transpose/index.html",
-    ("codecs", "zstd"): "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/zstd/index.html",
 }
 
 # zarr-extensions directory -> the metadata extension point it configures.
@@ -132,6 +136,10 @@ def stamp_stages(registry: dict[str, dict[str, object]]) -> None:
             schema = registry["codecs"].get(name)
             assert isinstance(schema, dict), f"no schema for staged codec {name}"
             schema["pipelineStage"] = stage
+    for name in VARIABLE_SIZED_CODECS:
+        schema = registry["codecs"].get(name)
+        assert isinstance(schema, dict), f"no schema for variable-sized codec {name}"
+        schema["encodedSize"] = "variable"
 
 
 def main() -> None:

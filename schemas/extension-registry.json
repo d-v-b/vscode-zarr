@@ -75,7 +75,8 @@
             },
             "typesize": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 1,
+              "description": "Positive integer: the stride in bytes over which shuffling is performed. Required unless shuffle is \"noshuffle\", in which case it is ignored."
             }
           },
           "additionalProperties": false,
@@ -90,9 +91,28 @@
               "cname": "zstd",
               "clevel": 5,
               "shuffle": "shuffle",
+              "typesize": 4,
               "blocksize": 0
             }
-          ]
+          ],
+          "if": {
+            "properties": {
+              "shuffle": {
+                "enum": [
+                  "shuffle",
+                  "bitshuffle"
+                ]
+              }
+            },
+            "required": [
+              "shuffle"
+            ]
+          },
+          "then": {
+            "required": [
+              "typesize"
+            ]
+          }
         }
       },
       "required": [
@@ -103,7 +123,8 @@
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html",
       "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/blosc/index.html",
-      "pipelineStage": "bytes_to_bytes"
+      "pipelineStage": "bytes_to_bytes",
+      "encodedSize": "variable"
     },
     "bytes": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -270,7 +291,8 @@
       "description": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/gzip/index.html",
       "source": "core-spec",
       "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/gzip/index.html",
-      "pipelineStage": "bytes_to_bytes"
+      "pipelineStage": "bytes_to_bytes",
+      "encodedSize": "variable"
     },
     "n5_default": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -786,9 +808,10 @@
         "configuration"
       ],
       "additionalProperties": false,
-      "source": "core-spec",
-      "documentation": "https://zarr-specs.readthedocs.io/en/latest/v3/codecs/zstd/index.html",
-      "pipelineStage": "bytes_to_bytes"
+      "source": "zarr-extensions",
+      "documentation": "https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/zstd",
+      "pipelineStage": "bytes_to_bytes",
+      "encodedSize": "variable"
     }
   },
   "data_type": {

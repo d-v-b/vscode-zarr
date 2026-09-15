@@ -187,9 +187,10 @@ function actionsFor(document, diagnostic) {
     (m) => m === 'expected exactly one array -> bytes codec in the pipeline (e.g. "bytes")',
     "sharding inner pipeline missing its array->bytes codec",
   );
-  if (diagnostics.length !== 11) {
+  expect((m) => m === "missing required key: typesize", "blosc typesize required when shuffling");
+  if (diagnostics.length !== 12) {
     console.error(messages);
-    throw new Error(`bad_codecs: expected exactly 11 diagnostics, got ${diagnostics.length}`);
+    throw new Error(`bad_codecs: expected exactly 12 diagnostics, got ${diagnostics.length}`);
   }
 }
 
@@ -358,6 +359,23 @@ for (const [docName, severity] of [[".zarray", 1], [".zgroup", 0]]) {
   }
   if (!lines[diagnostics[0].range.start.line].includes("0")) {
     throw new Error("zero_chunk: diagnostic not anchored on the zero entry");
+  }
+}
+
+// --- bad_codec_rules: codec-spec rules beyond plain value shapes ----------
+{
+  // blosc: "typesize ... Required unless shuffle is noshuffle" and positive;
+  // sharding: compression codecs "MUST NOT be used for index codecs".
+  const { diagnostics } = run("bad_codec_rules");
+  const messages = diagnostics.map((d) => d.message).sort();
+  const expected = [
+    '"gzip" produces variable-sized output and must not be used in "index_codecs"',
+    "missing required key: typesize",
+    "must be >= 1",
+  ];
+  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
+    console.error(messages);
+    throw new Error("bad_codec_rules: expected exactly the typesize and index-codec diagnostics");
   }
 }
 

@@ -56,6 +56,8 @@ interface RegistrySchema {
   required?: string[];
   documentation?: string;
   pipelineStage?: PipelineStage;
+  /** "variable" for codecs (compressors) whose output size depends on the input. */
+  encodedSize?: "variable";
   source?: "core-spec" | "zarr-extensions";
   $defs?: Record<string, object>;
 }
@@ -84,10 +86,19 @@ interface ConfigSchema {
   items?: ConfigSchema;
 }
 
-// Extensions whose configurations embed further codec pipelines to recurse into.
-const NESTED_PIPELINES: ReadonlyMap<string, ReadonlyArray<string>> = new Map([
-  ["sharding_indexed", ["codecs", "index_codecs"]],
-]);
+// Extensions whose configurations embed further codec pipelines to recurse
+// into. A fixed-size pipeline (the shard index) must not contain codecs
+// with variable-sized output.
+const NESTED_PIPELINES: ReadonlyMap<string, ReadonlyArray<{ key: string; fixedSize: boolean }>> =
+  new Map([
+    [
+      "sharding_indexed",
+      [
+        { key: "codecs", fixedSize: false },
+        { key: "index_codecs", fixedSize: true },
+      ],
+    ],
+  ]);
 
 // strict:false — registry schemas may carry unknown annotations (e.g. the
 // nonstandard "range" in zarr-extensions' transpose schema).
@@ -329,7 +340,10 @@ function condense(errors: ErrorObject[]): PathedIssue[] {
   }
   const issues: PathedIssue[] = [];
   for (const group of byLocation.values()) {
-    const branches = group.filter((e) => e.keyword !== "anyOf" && e.keyword !== "oneOf");
+    // anyOf/oneOf/if summaries only restate their branch errors.
+    const branches = group.filter(
+      (e) => e.keyword !== "anyOf" && e.keyword !== "oneOf" && e.keyword !== "if",
+    );
     const chosen = branches.length > 0 ? branches : group;
     const typeErrors = chosen.filter((e) => e.keyword === "type");
     if (typeErrors.length > 0) {
@@ -439,13 +453,25 @@ function validateField(
   }
   const nested = NESTED_PIPELINES.get(name);
   if (nested !== undefined) {
-    for (const key of nested) {
+    for (const { key, fixedSize } of nested) {
       const pipeline = configuration[key];
       if (!Array.isArray(pipeline)) continue;
       pipeline.forEach((item, index) => {
-        issues.push(
-          ...validateField("codecs", item, [...path, "configuration", key, index], options),
-        );
+        const itemPath = [...path, "configuration", key, index];
+        issues.push(...validateField("codecs", item, itemPath, options));
+        const itemName = codecName(item);
+        if (
+          fixedSize &&
+          itemName !== undefined &&
+          entryFor("codecs", itemName, options)?.encodedSize === "variable"
+        ) {
+          issues.push({
+            path: itemPath,
+            message: `${JSON.stringify(itemName)} produces variable-sized output and must not be used in ${JSON.stringify(key)}`,
+            kind: "invalid_value",
+            documentation: entry.documentation,
+          });
+        }
       });
       issues.push(...validatePipeline(pipeline, [...path, "configuration", key], options));
     }

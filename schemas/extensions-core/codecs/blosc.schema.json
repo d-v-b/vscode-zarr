@@ -39,7 +39,8 @@
         },
         "typesize": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1,
+          "description": "Positive integer: the stride in bytes over which shuffling is performed. Required unless shuffle is \"noshuffle\", in which case it is ignored."
         }
       },
       "additionalProperties": false,
@@ -54,9 +55,28 @@
           "cname": "zstd",
           "clevel": 5,
           "shuffle": "shuffle",
+          "typesize": 4,
           "blocksize": 0
         }
-      ]
+      ],
+      "if": {
+        "properties": {
+          "shuffle": {
+            "enum": [
+              "shuffle",
+              "bitshuffle"
+            ]
+          }
+        },
+        "required": [
+          "shuffle"
+        ]
+      },
+      "then": {
+        "required": [
+          "typesize"
+        ]
+      }
     }
   },
   "required": [
