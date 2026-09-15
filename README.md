@@ -49,9 +49,10 @@ extension names, and "mark as ignorable" to insert the
 
 ## Notes
 
-- Per the v2 spec, attributes live only in the sibling `.zattrs` file: an
-  `attributes` key in a `.zarray` or `.zgroup` file (or in such an entry of
-  `.zmetadata`) is reported as an error.
+- Per the v2 spec, attributes live only in the sibling `.zattrs` file. An
+  `attributes` key — like any key the spec doesn't define — is a warning in
+  a `.zarray` file ("SHOULD NOT be present") and an error in a `.zgroup`
+  file ("MUST NOT be present"), including such entries of `.zmetadata`.
 - Zarr v2 validation is structural: `dtype` strings, `fill_value`, and
   `compressor`/`filters` configurations are checked for shape, not
   interpreted. (Zarr v3 goes further, as described above: fill values are

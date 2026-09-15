@@ -150,6 +150,40 @@ function rangeFor(
   return { range: new vscode.Range(0, 0, 0, 0), resolvedDepth: 0 };
 }
 
+/** The members the v2 spec defines for `.zarray`. */
+const ZARRAY_KEYS_V2: ReadonlySet<string> = new Set([
+  "zarr_format",
+  "shape",
+  "chunks",
+  "dtype",
+  "compressor",
+  "fill_value",
+  "order",
+  "filters",
+  "dimension_separator",
+]);
+
+/**
+ * Whether an issue flags a member outside the v2 `.zarray` definition — in a
+ * `.zarray` file or a `.zarray` entry of `.zmetadata`. The v2 spec says such
+ * keys "SHOULD NOT be present" and "SHOULD be ignored", so they warrant a
+ * warning; `.zgroup` extras stay errors ("Other keys MUST NOT be present").
+ */
+function isZarrayExtraMember(issue: PathedIssue, basename: string): boolean {
+  let member = issue.path;
+  if (basename === ".zmetadata") {
+    const [top, entry] = issue.path;
+    if (top !== "metadata" || typeof entry !== "string") return false;
+    if (entry !== ".zarray" && !entry.endsWith("/.zarray")) return false;
+    member = issue.path.slice(2);
+  } else if (basename !== ".zarray") {
+    return false;
+  }
+  return (
+    issue.kind === "invalid_value" && member.length === 1 && !ZARRAY_KEYS_V2.has(String(member[0]))
+  );
+}
+
 function toDiagnostic(
   document: vscode.TextDocument,
   root: Node,
@@ -166,7 +200,10 @@ function toDiagnostic(
     message =
       issue.kind === "missing_key" ? `missing required key: ${suffix}` : `${suffix}: ${issue.message}`;
   }
-  const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
+  const severity = isZarrayExtraMember(issue, basename)
+    ? vscode.DiagnosticSeverity.Warning
+    : vscode.DiagnosticSeverity.Error;
+  const diagnostic = new vscode.Diagnostic(range, message, severity);
   diagnostic.source = "zarr";
   diagnostic.code = codeFor(issue.kind, basename);
   return diagnostic;

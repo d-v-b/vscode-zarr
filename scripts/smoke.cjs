@@ -305,16 +305,21 @@ function actionsFor(document, diagnostic) {
     console.error(got);
     throw new Error("bad_zmetadata: entry-document diagnostics did not match expectations");
   }
+  const warned = diagnostics.filter((d) => d.severity === 1).map((d) => d.message);
+  if (JSON.stringify(warned) !== JSON.stringify([expected[1]])) {
+    throw new Error("bad_zmetadata: the extra member of a .zarray entry must be a warning, the rest errors");
+  }
 }
 
-// --- bad_attributes: on-disk v2 documents reject a merged attributes key --
-for (const docName of [".zarray", ".zgroup"]) {
+// --- bad_attributes: on-disk v2 documents flag a merged attributes key ----
+// .zarray extras are a warning (SHOULD NOT), .zgroup extras an error (MUST NOT).
+for (const [docName, severity] of [[".zarray", 1], [".zgroup", 0]]) {
   const { diagnostics, lines } = run("bad_attributes", docName);
   const messages = diagnostics.map((d) => d.message);
   const expected = ["unexpected document member (on disk, attributes live in the sibling .zattrs file)"];
-  if (JSON.stringify(messages) !== JSON.stringify(expected)) {
-    console.error(messages);
-    throw new Error(`bad_attributes ${docName}: expected exactly the on-disk attributes error`);
+  if (JSON.stringify(messages) !== JSON.stringify(expected) || diagnostics[0].severity !== severity) {
+    console.error(diagnostics.map((d) => `${d.severity}: ${d.message}`));
+    throw new Error(`bad_attributes ${docName}: expected exactly the on-disk attributes diagnostic (severity ${severity})`);
   }
   if (!lines[diagnostics[0].range.start.line].includes('"attributes"')) {
     throw new Error(`bad_attributes ${docName}: diagnostic not anchored on the attributes key`);
@@ -340,6 +345,19 @@ for (const docName of [".zarray", ".zgroup"]) {
   if (JSON.stringify(messages) !== JSON.stringify(expected)) {
     console.error(messages);
     throw new Error("missing_keys: same-range diagnostics from one layer must not be deduped");
+  }
+}
+
+// --- zero_chunk: regular chunk sizes must be positive ---------------------
+{
+  const { diagnostics, lines } = run("zero_chunk");
+  const messages = diagnostics.map((d) => d.message);
+  if (JSON.stringify(messages) !== JSON.stringify(["must be >= 1"])) {
+    console.error(messages);
+    throw new Error("zero_chunk: expected exactly the positive-chunk-size error");
+  }
+  if (!lines[diagnostics[0].range.start.line].includes("0")) {
+    throw new Error("zero_chunk: diagnostic not anchored on the zero entry");
   }
 }
 
