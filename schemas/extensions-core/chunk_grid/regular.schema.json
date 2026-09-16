@@ -14,7 +14,8 @@
           "items": {
             "type": "integer",
             "minimum": 1
-          }
+          },
+          "description": "\"Chunk sizes must be greater than zero.\" https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v3/chunk-grids/regular-grid/index.rst#L40"
         }
       },
       "additionalProperties": false,

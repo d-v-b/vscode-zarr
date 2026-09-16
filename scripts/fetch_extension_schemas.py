@@ -57,6 +57,7 @@ CODEC_STAGES = {
 # Codecs whose encoded output is variable-sized. The sharding_indexed spec:
 # "Codecs that produce variable-sized encoded representation, such as
 # compression codecs, MUST NOT be used for index codecs."
+# https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v3/codecs/sharding-indexed/index.rst#L152-L154
 VARIABLE_SIZED_CODECS = ["blosc", "gzip", "zstd"]
 
 # Names defined by the CORE v3 spec (zarr-specs), regardless of where their

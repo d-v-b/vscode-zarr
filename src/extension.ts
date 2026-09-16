@@ -33,7 +33,7 @@ type Validator = (value: unknown) => PathedIssue[];
  * A v2 `.zarray`/`.zgroup`/`.zattrs` file validated as an on-disk document.
  * The library's plain v2 validators tolerate a merged `attributes` member
  * (parity with the Python model), but per the v2 spec attributes live only in
- * the sibling `.zattrs` file, which must hold a JSON object. The
+ * the sibling `.zattrs` file (https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v2/v2.0.rst#L326-L330), which must hold a JSON object. The
  * consolidated-entry layer applies exactly that on-disk interpretation, so a
  * file is validated as a lone entry of its kind.
  */
@@ -166,8 +166,9 @@ const ZARRAY_KEYS_V2: ReadonlySet<string> = new Set([
 /**
  * Whether an issue flags a member outside the v2 `.zarray` definition — in a
  * `.zarray` file or a `.zarray` entry of `.zmetadata`. The v2 spec says such
- * keys "SHOULD NOT be present" and "SHOULD be ignored", so they warrant a
- * warning; `.zgroup` extras stay errors ("Other keys MUST NOT be present").
+ * keys "SHOULD NOT be present" and "SHOULD be ignored" (https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v2/v2.0.rst#L91-L92), so
+ * they warrant a warning; `.zgroup` extras stay errors ("Other keys MUST NOT
+ * be present", https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v2/v2.0.rst#L313).
  */
 function isZarrayExtraMember(issue: PathedIssue, basename: string): boolean {
   let member = issue.path;

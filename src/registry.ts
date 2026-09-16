@@ -88,7 +88,7 @@ interface ConfigSchema {
 
 // Extensions whose configurations embed further codec pipelines to recurse
 // into. A fixed-size pipeline (the shard index) must not contain codecs
-// with variable-sized output.
+// with variable-sized output: https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v3/codecs/sharding-indexed/index.rst#L152-L154
 const NESTED_PIPELINES: ReadonlyMap<string, ReadonlyArray<{ key: string; fixedSize: boolean }>> =
   new Map([
     [

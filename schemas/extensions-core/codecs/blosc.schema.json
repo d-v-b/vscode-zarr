@@ -40,7 +40,7 @@
         "typesize": {
           "type": "integer",
           "minimum": 1,
-          "description": "Positive integer: the stride in bytes over which shuffling is performed. Required unless shuffle is \"noshuffle\", in which case it is ignored."
+          "description": "Positive integer: the stride in bytes over which shuffling is performed. Required unless shuffle is \"noshuffle\", in which case it is ignored. https://github.com/zarr-developers/zarr-specs/blob/fc7dd9c9beb5a50b87f9b08b00bf50fc0048482f/docs/v3/codecs/blosc/index.rst#L85-L88"
         }
       },
       "additionalProperties": false,
